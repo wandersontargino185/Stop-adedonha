@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stop Offline</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;font-family:Inter,Arial,sans-serif}
+  body{background:#0f172a;color:#f8fafc;display:flex;justify-content:center;align-items:center;min-height:100vh;padding:16px}
+.box{width:100%;max-width:600px;background:rgba(255,255,255,0.08);backdrop-filter:blur(14px);
+    border:1px solid rgba(255,255,255,0.12);border-radius:24px;padding:20px}
+  h1{font-size:22px;text-align:center;margin-bottom:12px}
+  input,button{padding:14px;border-radius:12px;border:none;font-size:15px;margin-top:10px}
+  input{background:rgba(255,255,255,0.1);color:white;border:1px solid rgba(255,255,255,0.2);width:100%}
+  button{background:linear-gradient(135deg,#8b5cf6,#7c3aed);color:white;font-weight:700;cursor:pointer}
+  button:disabled{opacity:0.5;cursor:not-allowed}
+.hidden{display:none}
+.players{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+.player{background:rgba(255,255,255,0.1);padding:8px 12px;border-radius:12px;font-size:13px}
+.player.you{border:1px solid #8b5cf6}
+.timer{font-size:32px;font-weight:700;text-align:center;color:#fbbf24;margin:12px 0}
+.letter{font-size:48px;font-weight:800;text-align:center;color:#22d3ee;margin:8px 0}
+.cats{display:grid;gap:10px;margin-top:16px}
+.cat{display:flex;gap:8px;align-items:center}
+.cat label{width:90px;font-size:13px;color:#cbd5e1}
+.cat input{flex:1;margin:0}
+.cat button{flex:0 0 40px;padding:0;margin:0;height:44px;font-size:18px;background:#22c55e;width:auto}
+.cat button.hidden{display:none}
+.log{background:rgba(0,0,0,0.3);padding:12px;border-radius:12px;max-height:200px;overflow:auto;font-size:13px;margin-top:12px}
+.scoreboard{background:rgba(0,0,0,0.2);padding:12px;border-radius:12px;margin-top:12px}
+.score-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.1)}
+.invalid{border:1px solid #ef4444!important}
+.valid{border:1px solid #22c55e!important}
+.free{border:1px solid #3b82f6!important}
+</style>
+</head>
+<body>
+<div class="box">
+  <h1>🔤 Stop Offline</h1>
+
+  <div id="lobby">
+    <input type="text" id="nome" placeholder="Seu nome" maxlength="12">
+    <input type="text" id="sala" placeholder="Código da sala" maxlength="6">
+    <button onclick="entrarSala()">Entrar/Criar Sala</button>
+  </div>
+
+  <div id="game" class="hidden">
+    <div class="players" id="players"></div>
+    <div id="status">Aguardando jogadores...</div>
+
+    <div id="preGame" class="hidden">
+      <button onclick="iniciarRodada()">🚀 Começar Rodada</button>
+    </div>
+
+    <div id="playArea" class="hidden">
+      <div class="timer" id="timer">10:00</div>
+      <div class="letter" id="letra">A</div>
+      <div class="cats" id="cats"></div>
+      <button onclick="pararJogo()">🛑 STOP!</button>
+    </div>
+
+    <div id="conferencia" class="hidden">
+      <h3>Resultado</h3>
+      <div id="listaRespostas"></div>
+      <button onclick="finalizarRodada()">✅ Próxima Rodada</button>
+    </div>
+
+    <div class="scoreboard" id="scoreboard"></div>
+    <div class="log" id="log">Nome, Filmes e Cidade são livres. Resto valida automático.</div>
+    <button onclick="sairSala()" style="background:#ef4444;margin-top:12px">Sair da Sala</button>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js';
+import { getDatabase, ref, set, onValue, remove, update, get } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyB5XG3yGvY9ZqK8L2M4N6P8R0T2V4X6Z8",
+  authDomain: "multiplayer-game-demo.firebaseapp.com",
+  databaseURL: "https://multiplayer-game-demo-default-rtdb.firebaseio.com",
+  projectId: "multiplayer-game-demo",
+  storageBucket: "multiplayer-game-demo.appspot.com",
+  messagingSenderId: "123456789012",
+  appId: "1:123456789012:web:abcdef1234567890"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+const CATEGORIAS = ['Nome', 'Objeto', 'Cor', 'Legumes', 'Filmes', 'Cidade', 'País'];
+const CATEGORIAS_LIVRES = ['Nome', 'Filmes', 'Cidade'];
+const CATEGORIAS_VALIDAR = ['Objeto', 'Cor', 'Legumes', 'País'];
+
+let salaAtual = null;
+let meuId = 'p_' + Math.random().toString(36).slice(2,8);
+let meuNome = '';
+let overrideWords = new Set();
+
+// Dicionário reduzido só com palavras das categorias que validam
+const DICT_RAW = `amarelo,azul,branco,preto,vermelho,verde,roxo,rosa,cinza,marrom,laranja,bege,dourado,prata,violeta,turquesa,coral,creme,bordo,vinho,caqui,magenta,ciano,indigo,salmao,ceruleo,esmeralda,rubi,safira,topazio,ametista,escarlate,carmesim,ocre,siena,umbra,cobalto,jade,limão,menta,oliva,pêssego,salmão,tijolo,marfim,perola,
+alface,batata,cenoura,abobora,abobrinha,berinjela,pepino,tomate,cebola,alho,pimentao,brocolis,couve,espinafre,agriao,rucula,acelga,chuchu,milho,ervilha,feijao,lentilha,grao,beterraba,rabanete,nabo,inhame,mandioca,mandioquinha,cara,jilo,quiabo,maxixe,vagem,couveflor,ervadoc,e,brocolis,repoulho,nabo,radite,rutabaga,salsao,aipo,alho,poro,cebolinha,salsa,coentro,manjericao,oregano,tomilho,alecrim,louro,curcuma,gengibre,
+mesa,cadeira,sofa,cama,armario,guarda,roupa,comoda,estante,mesinha,banqueta,banquinho,poltrona,pufe,diva,beliche,berco,colchao,travesseiro,lençol,cobertor,edredom,manta,toalha,guardanapo,prato,copo,xícara,caneca,tigela,panela,frigideira,caçarola,assadeira,forma,faça,garfo,colher,concha,escumadeira,abridor,saca,rolhas,ralador,peneira,liquidificador,batedeira,mix,torradeira,cafeteira,chaleira,geladeira,freezer,fogao,forno,microondas,maquina,lavar,secadora,aspirador,vassoura,rodo,pano,balde,bacia,sabao,detergente,amaciante,alvejante,desinfetante,esponja,escova,dente,pasta,shampoo,condicionador,sabão,sabão,perfume,desodorante,creme,hidratante,maquiagem,batom,sombra,rimel,esmalte,cortador,unha,pinça,pente,escova,cabelo,secador,chapinha,barbeador,aparelho,barbear,lamina,gilete,tesoura,alicate,prego,martelo,chave,fenda,phillips,alicate,alicates,serra,trena,nivel,lápis,caneta,caneta,esferográfica,caneta,tinteiro,borracha,apontador,regua,compasso,transferidor,caderno,agenda,calendário,livro,revista,jornal,carta,envelope,selo,carimbo,tinta,tinta,caneta,hidrográfica,marcador,marca,texto,cola,bastão,cola,liquida,fita,adesiva,fita,crepe,clipe,grampeador,grampos,perfurador,pasta,arquivo,pasta,suspensa,etiqueta,post,it,quadro,branco,quadro,negro,giz,apagador,projetor,tela,computador,notebook,tablet,celular,teclado,mouse,monitor,impressora,scanner,roteador,modem,cabo,carregador,fone,ouvido,fone,bluetooth,caixa,som,televisao,controle,remoto,dvd,blu,ray,console,videogame,controle,jogo,brinquedo,bola,boneca,carrinho,lego,quebra,cabeça,jogo,tabuleiro,carta,baralho,dado,peão,peça,xadrez,dama,dam,domino,trilha,ludo,banco,imobiliario,war,risk,magico,cubo,rubik,io,pião,bola,gude,pipa,pipoca,algodao,doce,sorvete,picolé,bolo,torta,doce,bala,chocolate,bombom,pirulito,goma,mascara,caramelo,paçoca,pé,moleque,cocada,quindim,brigadeiro,beijinho,cajuzinho,olho,sogra,camarao,pão,queijo,presunto,mortadela,salame,linguiça,bacon,carne,frango,peixe,sardinha,atum,salmao,tilapia,pacu,tambaqui,dourado,pintado,pirarucu,robalo,lula,polvo,camarao,siri,caranguejo,ostra,mexilhao,vieira,lagosta,caranguejo,carangueijo,carangueijo,
+brasil,argentina,portugal,espanha,franca,italia,alemanha,inglaterra,eua,canada,mexico,colombia,chile,peru,uruguai,paraguai,bolivia,venezuela,cuba,jamaica,china,japao,coreia,india,russia,ucrania,polonia,holanda,belgica,suica,austria,suecia,noruega,finlandia,dinamarca,grecia,turquia,egito,marrocos,africa,australia,nova,zelandia,africa,sul,angola,mozambique,cabo,verde,guine,bissau,sao,tome,princip`;
+
+const dicionario = new Set(DICT_RAW.split(',').map(w => removerAcento(w.trim().toLowerCase())));
+
+window.entrarSala = function() {
+  meuNome = document.getElementById('nome').value.trim();
+  salaAtual = document.getElementById('sala').value.trim().toUpperCase();
+  if(!meuNome ||!salaAtual) return alert('Preenche nome e código da sala');
+
+  const playerRef = ref(db, `stop/${salaAtual}/players/${meuId}`);
+  set(playerRef, {nome: meuNome, score: 0});
+
+  document.getElementById('lobby').classList.add('hidden');
+  document.getElementById('game').classList.remove('hidden');
+  escutarSala();
+  window.onbeforeunload = () => remove(playerRef);
+}
+
+function escutarSala() {
+  const salaRef = ref(db, `stop/${salaAtual}`);
+  onValue(salaRef, (snap) => {
+    const data = snap.val();
+    if(!data) return;
+
+    const players = data.players || {};
+    const playerCount = Object.keys(players).length;
+
+    document.getElementById('players').innerHTML = Object.entries(players)
+  .map(([id,p]) => `<div class="player ${id===meuId?'you':''}">${p.nome} - ${p.score||0}pts</div>`)
+  .join('');
+
+    if(playerCount >= 2 &&!data.rodada) {
+      if(Object.keys(players)[0] === meuId) {
+        document.getElementById('preGame').classList.remove('hidden');
+      }
+      document.getElementById('status').textContent = 'Pronto pra começar';
+    }
+
+    if(data.rodada) {
+      atualizarRodada(data.rodada);
+    }
+
+    atualizarScoreboard(players);
+  });
+}
+
+window.iniciarRodada = function() {
+  const letras = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const letra = letras[Math.floor(Math.random() * letras.length)];
+
+  const rodada = {
+    letra: letra,
+    status: 'jogando',
+    inicio: Date.now(),
+    duracao: 600000,
+    respostas: {},
+    parouPor: null
+  };
+
+  overrideWords.clear();
+  set(ref(db, `stop/${salaAtual}/rodada`), rodada);
+}
+
+function atualizarRodada(rodada) {
+  const agora = Date.now();
+  const tempoRestante = Math.max(0, rodada.duracao - (agora - rodada.inicio));
+
+  if(rodada.status === 'jogando') {
+    document.getElementById('playArea').classList.remove('hidden');
+    document.getElementById('preGame').classList.add('hidden');
+    document.getElementById('letra').textContent = rodada.letra;
+
+    if(!document.getElementById('cats').innerHTML) {
+      document.getElementById('cats').innerHTML = CATEGORIAS.map(cat => {
+        const isFree = CATEGORIAS_LIVRES.includes(cat);
+        return `<div class="cat">
+          <label>${cat}:</label>
+          <input id="cat_${cat}" placeholder="${rodada.letra}..." onblur="validarCampo(this)" class="${isFree?'free':''}">
+          ${!isFree? `<button id="btn_${cat}" class="hidden" onclick="forcarValida('${cat}')">✓</button>` : ''}
+        </div>`;
+      }).join('');
+    }
+
+    const min = Math.floor(tempoRestante/60000);
+    const seg = Math.floor((tempoRestante%60000)/1000);
+    document.getElementById('timer').textContent = `${min}:${seg.toString().padStart(2,'0')}`;
+
+    if(tempoRestante <= 0) {
+      finalizarTempo();
+    }
+  }
+
+  if(rodada.status === 'conferencia') {
+    document.getElementById('playArea').classList.add('hidden');
+    document.getElementById('conferencia').classList.remove('hidden');
+    montarConferencia(rodada);
+  }
+}
+
+window.validarCampo = function(input) {
+  const cat = input.id.replace('cat_','');
+  const val = removerAcento(input.value.trim().toLowerCase());
+  const letra = document.getElementById('letra').textContent.toLowerCase();
+  const btn = document.getElementById(`btn_${cat}`);
+
+  input.classList.remove('invalid','valid','free');
+
+  if(!val) return;
+
+  if(!val.startsWith(letra)) {
+    input.classList.add('invalid');
+    if(btn) btn.classList.add('hidden');
+    return;
+  }
+
+  if(CATEGORIAS_LIVRES.includes(cat)) {
+    input.classList.add('free');
+    return;
+  }
+
+  if(dicionario.has(val) || overrideWords.has(val)) {
+    input.classList.add('valid');
+    if(btn) btn.classList.add('hidden');
+  } else {
+    input.classList.add('invalid');
+    if(btn) btn.classList.remove('hidden');
+  }
+}
+
+window.forcarValida = function(cat) {
+  const input = document.getElementById(`cat_${cat}`);
+  const val = removerAcento(input.value.trim().toLowerCase());
+  overrideWords.add(val);
+  input.classList.remove('invalid');
+  input.classList.add('valid');
+  document.getElementById(`btn_${cat}`).classList.add('hidden');
+}
+
+window.pararJogo = function() {
+  update(ref(db, `stop/${salaAtual}/rodada`), {
+    status: 'conferencia',
+    parouPor: meuId
+  });
+  salvarRespostas();
+}
+
+function finalizarTempo() {
+  update(ref(db, `stop/${salaAtual}/rodada`), {
+    status: 'conferencia'
+  });
+  salvarRespostas();
+}
+
+function salvarRespostas() {
+  const respostas = {};
+  CATEGORIAS.forEach(cat => {
+    const val = document.getElementById(`cat_${cat}`)?.value.trim() || '';
+    respostas[cat] = val;
+  });
+  set(ref(db, `stop/${salaAtual}/rodada/respostas/${meuId}`), respostas);
+}
+
+function montarConferencia(rodada) {
+  const container = document.getElementById('listaRespostas');
+  let html = '';
+
+  const pontos = calcularPontos(rodada);
+
+  CATEGORIAS.forEach(cat => {
+    html += `<h4>${cat}</h4>`;
+    Object.entries(rodada.respostas || {}).forEach(([pid, resp]) => {
+      const palavra = resp[cat] || '-';
+      const pts = pontos[pid]?.[cat] || 0;
+      html += `<div style="margin:6px 0">
+        ${pid === meuId? palavra : palavra + ' - ' + pts + 'pts'}
+      </div>`;
+    });
+  });
+
+  container.innerHTML = html;
+}
+
+window.finalizarRodada = function() {
+  const rodadaRef = ref(db, `stop/${salaAtual}/rodada`);
+  get(rodadaRef).then(snap => {
+    const rodada = snap.val();
+    const pontos = calcularPontos(rodada);
+
+    Object.entries(pontos).forEach(([pid, cats]) => {
+      const total = Object.values(cats).reduce((a,b)=>a+b,0);
+      const scoreRef = ref(db, `stop/${salaAtual}/players/${pid}/score`);
+      get(scoreRef).then(s => {
+        const atual = s.val() || 0;
+        set(scoreRef, atual + total);
+      });
+    });
+
+    setTimeout(() => {
+      remove(rodadaRef);
+      document.getElementById('conferencia').classList.add('hidden');
+      document.getElementById('playArea').classList.add('hidden');
+      document.getElementById('cats').innerHTML = '';
+    }, 4000);
+  });
+}
+
+function calcularPontos(rodada) {
+  const pontos = {};
+  const respostas = rodada.respostas || {};
+  const letra = rodada.letra.toLowerCase();
+
+  CATEGORIAS.forEach(cat => {
+    const palavras = {};
+
+    Object.entries(respostas).forEach(([pid, resp]) => {
+      let palavra = (resp[cat] || '').trim();
+      let palavraNorm = removerAcento(palavra.toLowerCase());
+
+      if(!palavraNorm ||!palavraNorm.startsWith(letra)) {
+        palavras[pid] = {val: palavra, pts: 0};
+        return;
+      }
+
+      if(CATEGORIAS_LIVRES.includes(cat)) {
+        palavras[pid] = {val: palavra, pts: 10};
+        return;
+      }
+
+      if(!dicionario.has(palavraNorm) &&!overrideWords.has(palavraNorm)) {
+        palavras[pid] = {val: palavra, pts: 0};
+        return;
+      }
+
+      let repeticoes = 0;
+      Object.values(respostas).forEach(r => {
+        let p2 = removerAcento((r[cat]||'').toLowerCase()).trim();
+        if(p2 === palavraNorm) repeticoes++;
+      });
+
+      palavras[pid] = {val: palavra, pts: repeticoes === 1? 10 : 5};
+    });
+
+    Object.entries(palavras).forEach(([pid, p]) => {
+      if(!pontos[pid]) pontos[pid] = {};
+      pontos[pid][cat] = p.pts;
+    });
+  });
+
+  return pontos;
+}
+
+function removerAcento(str) {
+  return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+function atualizarScoreboard(players) {
+  const sorted = Object.entries(players).sort((a,b) => (b[1].score||0) - (a[1].score||0));
+  document.getElementById('scoreboard').innerHTML = '<h4>Placar</h4>' +
+    sorted.map(([id,p]) => `<div class="score-row"><span>${p.nome}</span><span>${p.score||0} pts</span></div>`).join('');
+}
+
+window.sairSala = function() {
+  if(salaAtual) remove(ref(db, `stop/${salaAtual}/players/${meuId}`));
+  location.reload();
+}
+</script>
+</body>
+</html>
