@@ -7,7 +7,7 @@
 <style>
   *{margin:0;padding:0;box-sizing:border-box;font-family:Inter,Arial,sans-serif}
   body{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#f8fafc;display:flex;justify-content:center;align-items:center;min-height:100vh;padding:16px}
- .box{width:100%;max-width:800px;background:rgba(255,255,255,0.08);backdrop-filter:blur(14px);
+.box{width:100%;max-width:800px;background:rgba(255,255,255,0.08);backdrop-filter:blur(14px);
     border:1px solid rgba(255,255,255,0.12);border-radius:24px;padding:24px;box-shadow:0 8px 32px rgba(0,0,0,0.3)}
   h1{font-size:26px;text-align:center;margin-bottom:16px}
   input,button{width:100%;padding:14px;border-radius:12px;border:none;font-size:15px;margin-top:10px}
@@ -16,25 +16,27 @@
   button{background:linear-gradient(135deg,#8b5cf6,#7c3aed);color:white;font-weight:700;cursor:pointer;transition:0.3s}
   button:hover{transform:translateY(-2px)}
   button:disabled{opacity:0.5;cursor:not-allowed}
- .hidden{display:none}
- .players{display:flex;gap:12px;justify-content:space-around;margin:16px 0;flex-wrap:wrap}
- .player-card{background:rgba(255,255,255,0.15);padding:16px;border-radius:16px;text-align:center;min-width:140px}
- .player-card.you{border:2px solid #8b5cf6}
- .score-bar{height:20px;background:rgba(255,255,255,0.2);border-radius:10px;overflow:hidden;margin-top:8px}
- .score-fill{height:100%;background:linear-gradient(90deg,#4ecdc4,#44a3aa);transition:width 0.5s}
- .timer{font-size:32px;font-weight:700;text-align:center;color:#fbbf24;margin:12px 0}
- .letter{font-size:56px;font-weight:800;text-align:center;color:#22d3ee;margin:8px 0;text-shadow:0 0 20px rgba(34,211,238,0.5)}
- .cats{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+.hidden{display:none}
+.players{display:flex;gap:12px;justify-content:space-around;margin:16px 0;flex-wrap:wrap}
+.player-card{background:rgba(255,255,255,0.15);padding:16px;border-radius:16px;text-align:center;min-width:140px}
+.player-card.you{border:2px solid #8b5cf6}
+.player-card.waiting{border:2px solid #fbbf24}
+.score-bar{height:20px;background:rgba(255,255,255,0.2);border-radius:10px;overflow:hidden;margin-top:8px}
+.score-fill{height:100%;background:linear-gradient(90deg,#4ecdc4,#44a3aa);transition:width 0.5s}
+.timer{font-size:32px;font-weight:700;text-align:center;color:#fbbf24;margin:12px 0}
+.letter{font-size:56px;font-weight:800;text-align:center;color:#22d3ee;margin:8px 0;text-shadow:0 0 20px rgba(34,211,238,0.5)}
+.cats{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
   @media(max-width:600px){.cats{grid-template-columns:1fr}}
- .cat{background:rgba(255,255,255,0.1);padding:12px;border-radius:12px}
- .cat label{display:block;font-size:13px;color:#cbd5e1;margin-bottom:6px;font-weight:600}
- .cat input{margin:0}
- .result-table{width:100%;margin-top:16px;border-collapse:collapse}
- .result-table th,.result-table td{padding:10px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.2)}
- .points-10{color:#4ecdc4;font-weight:700}
- .points-5{color:#ffd93d;font-weight:700}
- .points-0{color:#ff6b6b}
- .log{background:rgba(0,0,0,0.3);padding:12px;border-radius:12px;max-height:150px;overflow:auto;font-size:13px;margin-top:12px}
+.cat{background:rgba(255,255,255,0.1);padding:12px;border-radius:12px}
+.cat label{display:block;font-size:13px;color:#cbd5e1;margin-bottom:6px;font-weight:600}
+.cat input{margin:0}
+.result-table{width:100%;margin-top:16px;border-collapse:collapse}
+.result-table th,.result-table td{padding:10px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.2)}
+.points-10{color:#4ecdc4;font-weight:700}
+.points-5{color:#ffd93d;font-weight:700}
+.points-0{color:#ff6b6b}
+.log{background:rgba(0,0,0,0.3);padding:12px;border-radius:12px;max-height:150px;overflow:auto;font-size:13px;margin-top:12px}
+.status-info{text-align:center;margin:12px 0;color:#fbbf24;font-weight:600}
 </style>
 </head>
 <body>
@@ -50,16 +52,17 @@
 
   <div id="game" class="hidden">
     <div class="players" id="players"></div>
+    <div class="status-info" id="statusInfo"></div>
 
     <div id="preGame" class="hidden">
       <button onclick="iniciarRodada()">🚀 Começar Rodada</button>
     </div>
 
     <div id="playArea" class="hidden">
-      <div class="timer" id="timer">10:00</div>
+      <div class="timer" id="timer">5:00</div>
       <div class="letter" id="letra">A</div>
       <div class="cats" id="cats"></div>
-      <button onclick="pararJogo()">🛑 STOP!</button>
+      <button id="stopBtn" onclick="pararJogo()">🛑 STOP!</button>
     </div>
 
     <div id="resultArea" class="hidden">
@@ -79,7 +82,6 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js';
 import { getDatabase, ref, set, onValue, remove, update, get } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js';
 
-// SUAS CREDENCIAIS AQUI
 const firebaseConfig = {
   apiKey: "AIzaSyByHwg1w_8SEfFj2rTJA_drFSmWys0aq08",
   authDomain: "adedonha123-f4f2d.firebaseapp.com",
@@ -98,6 +100,7 @@ let salaAtual = null;
 let meuId = 'p_' + Math.random().toString(36).slice(2,8);
 let meuNome = '';
 let timerInterval = null;
+let pontosJaSomados = false;
 
 window.entrarSala = async function() {
   meuNome = document.getElementById('nome').value.trim();
@@ -135,10 +138,10 @@ function escutarSala() {
     const players = data.players || {};
     const ids = Object.keys(players);
 
-    // Atualiza cards dos jogadores com barra de pontos
+    // Atualiza cards dos jogadores
     const maxScore = Math.max(...ids.map(id => players[id].score || 0), 1);
-    document.getElementById('players').innerHTML = ids.map((id,i) => `
-      <div class="player-card ${id===meuId?'you':''}">
+    document.getElementById('players').innerHTML = ids.map(id => `
+      <div class="player-card ${id===meuId?'you':''} ${data.rodada?.aguardando?.includes(id)?'waiting':''}">
         <div><b>${players[id].nome}</b></div>
         <div>${players[id].score || 0} pts</div>
         <div class="score-bar">
@@ -147,7 +150,6 @@ function escutarSala() {
       </div>
     `).join('');
 
-    // Libera começar se tiver 2 jogadores
     if(ids.length >= 2 &&!data.rodada) {
       if(ids[0] === meuId) document.getElementById('preGame').classList.remove('hidden');
     }
@@ -159,6 +161,7 @@ function escutarSala() {
 }
 
 window.iniciarRodada = function() {
+  pontosJaSomados = false;
   const letras = 'BCDFGHJKLMNPQRSTVWXYZ';
   const letra = letras[Math.floor(Math.random() * letras.length)];
 
@@ -167,15 +170,29 @@ window.iniciarRodada = function() {
     status: 'jogando',
     inicio: Date.now(),
     duracao: 600000,
-    respostas: {}
+    respostas: {},
+    parouPor: null,
+    aguardando: [],
+    pontosSomados: false
   });
 }
 
 function atualizarRodada(rodada, players) {
   const agora = Date.now();
   const tempoRestante = Math.max(0, rodada.duracao - (agora - rodada.inicio));
+  const ids = Object.keys(players);
 
-  if(rodada.status === 'jogando') {
+  // Status na tela
+  if(rodada.status === 'aguardando-outro') {
+    const aguardando = rodada.aguardando?.find(id => id!== meuId);
+    document.getElementById('statusInfo').textContent = aguardando
+     ? `Aguardando ${players[aguardando].nome} terminar...`
+      : 'Aguardando o outro jogador...';
+  } else {
+    document.getElementById('statusInfo').textContent = '';
+  }
+
+  if(rodada.status === 'jogando' || rodada.status === 'aguardando-outro') {
     document.getElementById('playArea').classList.remove('hidden');
     document.getElementById('preGame').classList.add('hidden');
     document.getElementById('resultArea').classList.add('hidden');
@@ -198,27 +215,73 @@ function atualizarRodada(rodada, players) {
       const min2 = Math.floor(t/60000);
       const seg2 = Math.floor((t%60000)/1000);
       document.getElementById('timer').textContent = `${min2}:${seg2.toString().padStart(2,'0')}`;
-      if(t <= 0) finalizarTempo();
+
+      if(t <= 0 && rodada.status!== 'conferencia') {
+        finalizarTempo();
+      }
     }, 1000);
   }
 
-  if(rodada.status === 'conferencia') {
+  if(rodada.status === 'conferencia' &&!pontosJaSomados) {
     clearInterval(timerInterval);
     document.getElementById('playArea').classList.add('hidden');
     document.getElementById('resultArea').classList.remove('hidden');
     mostrarResultados(rodada.respostas, players, rodada.letra);
+    pontosJaSomados = true;
   }
 }
 
-window.pararJogo = function() {
+window.pararJogo = async function() {
+  document.getElementById('stopBtn').disabled = true;
   salvarRespostas();
-  update(ref(db, `stop/${salaAtual}/rodada`), { status: 'conferencia' });
+
+  const rodadaRef = ref(db, `stop/${salaAtual}/rodada`);
+  const snap = await get(rodadaRef);
+  const rodada = snap.val();
+
+  if(!rodada) return;
+
+  const ids = Object.keys((await get(ref(db, `stop/${salaAtual}/players`))).val());
+  const jaRespondeu = Object.keys(rodada.respostas || {});
+
+  // Se sou o primeiro a parar
+  if(!rodada.parouPor) {
+    await update(rodadaRef, {
+      parouPor: meuId,
+      status: 'aguardando-outro',
+      aguardando: ids.filter(id => id!== meuId),
+      duracao: 300000, // diminui pra 5 min pro outro terminar
+      inicio: Date.now()
+    });
+    log('Você deu STOP! Aguardando o outro jogador...');
+  } else {
+    // Segundo jogador respondeu, pode ir pra conferência
+    await update(rodadaRef, { status: 'conferencia' });
+  }
 }
 
-function finalizarTempo() {
+async function finalizarTempo() {
   clearInterval(timerInterval);
   salvarRespostas();
-  update(ref(db, `stop/${salaAtual}/rodada`), { status: 'conferencia' });
+
+  const rodadaRef = ref(db, `stop/${salaAtual}/rodada`);
+  const snap = await get(rodadaRef);
+  const rodada = snap.val();
+
+  const jaRespondeu = Object.keys(rodada.respostas || {});
+  const ids = Object.keys((await get(ref(db, `stop/${salaAtual}/players`))).val());
+
+  if(jaRespondeu.length === ids.length) {
+    await update(rodadaRef, { status: 'conferencia' });
+  } else {
+    // Se ainda tem gente sem responder, coloca em aguardando
+    await update(rodadaRef, {
+      status: 'aguardando-outro',
+      aguardando: ids.filter(id =>!jaRespondeu.includes(id)),
+      duracao: 300000,
+      inicio: Date.now()
+    });
+  }
 }
 
 function salvarRespostas() {
@@ -229,7 +292,9 @@ function salvarRespostas() {
   set(ref(db, `stop/${salaAtual}/rodada/respostas/${meuId}`), respostas);
 }
 
-function mostrarResultados(respostas, players, letra) {
+async function mostrarResultados(respostas, players, letra) {
+  if(pontosJaSomados) return;
+
   const ids = Object.keys(players);
   const r1 = respostas[ids[0]] || {};
   const r2 = respostas[ids[1]] || {};
@@ -239,8 +304,8 @@ function mostrarResultados(respostas, players, letra) {
   let pontos1 = 0, pontos2 = 0;
 
   CATEGORIAS.forEach(cat => {
-    const val1 = (r1[cat] || '').toLowerCase().trim();
-    const val2 = (r2[cat] || '').toLowerCase().trim();
+    const val1 = removerAcento((r1[cat] || '').toLowerCase().trim());
+    const val2 = removerAcento((r2[cat] || '').toLowerCase().trim());
 
     let p1 = 0, p2 = 0;
     if(val1 && val1.startsWith(l)) {
@@ -262,25 +327,37 @@ function mostrarResultados(respostas, players, letra) {
   html += `<tr><td><b>Total</b></td><td><b>${pontos1}</b></td><td><b>${pontos2}</b></td></tr>`;
   document.getElementById('resultTable').innerHTML = html;
 
-  // Salva pontos no Firebase
-  update(ref(db, `stop/${salaAtual}/players/${ids[0]}`), { score: players[ids[0]].score + pontos1 });
-  if(ids[1]) update(ref(db, `stop/${salaAtual}/players/${ids[1]}`), { score: players[ids[1]].score + pontos2 });
+  // Só soma pontos 1 vez
+  const rodadaSnap = await get(ref(db, `stop/${salaAtual}/rodada`));
+  if(!rodadaSnap.val().pontosSomados) {
+    await update(ref(db, `stop/${salaAtual}/players/${ids[0]}`), { score: players[ids[0]].score + pontos1 });
+    if(ids[1]) await update(ref(db, `stop/${salaAtual}/players/${ids[1]}`), { score: players[ids[1]].score + pontos2 });
+    await update(ref(db, `stop/${salaAtual}/rodada`), { pontosSomados: true });
+  }
+}
+
+function removerAcento(str) {
+  return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
 
 window.proximaRodada = async function() {
   await remove(ref(db, `stop/${salaAtual}/rodada`));
   document.getElementById('resultArea').classList.add('hidden');
   document.getElementById('cats').innerHTML = '';
+  document.getElementById('stopBtn').disabled = false;
 }
 
 window.reiniciarPartida = async function() {
   const players = (await get(ref(db, `stop/${salaAtual}/players`))).val();
+  const updates = {};
   Object.keys(players).forEach(id => {
-    update(ref(db, `stop/${salaAtual}/players/${id}`), { score: 0 });
+    updates[`stop/${salaAtual}/players/${id}/score`] = 0;
   });
+  await update(ref(db), updates);
   await remove(ref(db, `stop/${salaAtual}/rodada`));
   document.getElementById('resultArea').classList.add('hidden');
   document.getElementById('cats').innerHTML = '';
+  document.getElementById('stopBtn').disabled = false;
   log('Partida reiniciada!');
 }
 
