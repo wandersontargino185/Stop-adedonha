@@ -6,27 +6,35 @@
 <title>Stop Online</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box;font-family:Inter,Arial,sans-serif}
-  body{background:#0f172a;color:#f8fafc;display:flex;justify-content:center;align-items:center;min-height:100vh;padding:16px}
-.box{width:100%;max-width:600px;background:rgba(255,255,255,0.08);backdrop-filter:blur(14px);
-    border:1px solid rgba(255,255,255,0.12);border-radius:24px;padding:20px}
-  h1{font-size:22px;text-align:center;margin-bottom:12px}
+  body{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#f8fafc;display:flex;justify-content:center;align-items:center;min-height:100vh;padding:16px}
+ .box{width:100%;max-width:800px;background:rgba(255,255,255,0.08);backdrop-filter:blur(14px);
+    border:1px solid rgba(255,255,255,0.12);border-radius:24px;padding:24px;box-shadow:0 8px 32px rgba(0,0,0,0.3)}
+  h1{font-size:26px;text-align:center;margin-bottom:16px}
   input,button{width:100%;padding:14px;border-radius:12px;border:none;font-size:15px;margin-top:10px}
   input{background:rgba(255,255,255,0.1);color:white;border:1px solid rgba(255,255,255,0.2)}
-  button{background:linear-gradient(135deg,#8b5cf6,#7c3aed);color:white;font-weight:700;cursor:pointer}
+  input::placeholder{color:rgba(255,255,255,0.6)}
+  button{background:linear-gradient(135deg,#8b5cf6,#7c3aed);color:white;font-weight:700;cursor:pointer;transition:0.3s}
+  button:hover{transform:translateY(-2px)}
   button:disabled{opacity:0.5;cursor:not-allowed}
-.hidden{display:none}
-.players{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
-.player{background:rgba(255,255,255,0.1);padding:8px 12px;border-radius:12px;font-size:13px}
-.player.you{border:1px solid #8b5cf6}
-.timer{font-size:32px;font-weight:700;text-align:center;color:#fbbf24;margin:12px 0}
-.letter{font-size:48px;font-weight:800;text-align:center;color:#22d3ee;margin:8px 0}
-.cats{display:grid;gap:10px;margin-top:16px}
-.cat{display:flex;gap:8px;align-items:center}
-.cat label{width:90px;font-size:13px;color:#cbd5e1}
-.cat input{flex:1;margin:0}
-.log{background:rgba(0,0,0,0.3);padding:12px;border-radius:12px;max-height:200px;overflow:auto;font-size:13px;margin-top:12px}
-.scoreboard{background:rgba(0,0,0,0.2);padding:12px;border-radius:12px;margin-top:12px}
-.score-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.1)}
+ .hidden{display:none}
+ .players{display:flex;gap:12px;justify-content:space-around;margin:16px 0;flex-wrap:wrap}
+ .player-card{background:rgba(255,255,255,0.15);padding:16px;border-radius:16px;text-align:center;min-width:140px}
+ .player-card.you{border:2px solid #8b5cf6}
+ .score-bar{height:20px;background:rgba(255,255,255,0.2);border-radius:10px;overflow:hidden;margin-top:8px}
+ .score-fill{height:100%;background:linear-gradient(90deg,#4ecdc4,#44a3aa);transition:width 0.5s}
+ .timer{font-size:32px;font-weight:700;text-align:center;color:#fbbf24;margin:12px 0}
+ .letter{font-size:56px;font-weight:800;text-align:center;color:#22d3ee;margin:8px 0;text-shadow:0 0 20px rgba(34,211,238,0.5)}
+ .cats{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+  @media(max-width:600px){.cats{grid-template-columns:1fr}}
+ .cat{background:rgba(255,255,255,0.1);padding:12px;border-radius:12px}
+ .cat label{display:block;font-size:13px;color:#cbd5e1;margin-bottom:6px;font-weight:600}
+ .cat input{margin:0}
+ .result-table{width:100%;margin-top:16px;border-collapse:collapse}
+ .result-table th,.result-table td{padding:10px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.2)}
+ .points-10{color:#4ecdc4;font-weight:700}
+ .points-5{color:#ffd93d;font-weight:700}
+ .points-0{color:#ff6b6b}
+ .log{background:rgba(0,0,0,0.3);padding:12px;border-radius:12px;max-height:150px;overflow:auto;font-size:13px;margin-top:12px}
 </style>
 </head>
 <body>
@@ -36,12 +44,12 @@
   <div id="lobby">
     <input type="text" id="nome" placeholder="Seu nome" maxlength="12">
     <input type="text" id="sala" placeholder="Código da sala" maxlength="6">
+    <input type="password" id="senha" placeholder="Senha da sala">
     <button onclick="entrarSala()">Entrar/Criar Sala</button>
   </div>
 
   <div id="game" class="hidden">
     <div class="players" id="players"></div>
-    <div id="status">Aguardando jogadores...</div>
 
     <div id="preGame" class="hidden">
       <button onclick="iniciarRodada()">🚀 Começar Rodada</button>
@@ -54,13 +62,14 @@
       <button onclick="pararJogo()">🛑 STOP!</button>
     </div>
 
-    <div id="conferencia" class="hidden">
-      <h3>Conferência - Marca o que está errado</h3>
-      <div id="listaRespostas"></div>
-      <button onclick="finalizarRodada()">✅ Confirmar Pontos</button>
+    <div id="resultArea" class="hidden">
+      <h3>📊 Resultados da Rodada</h3>
+      <table class="result-table" id="resultTable"></table>
+      <button onclick="proximaRodada()">Próxima Rodada</button>
+      <button onclick="reiniciarPartida()">Reiniciar Partida</button>
+      <button onclick="novaPartida()">Nova Partida</button>
     </div>
 
-    <div class="scoreboard" id="scoreboard"></div>
     <div class="log" id="log"></div>
     <button onclick="sairSala()" style="background:#ef4444;margin-top:12px">Sair da Sala</button>
   </div>
@@ -84,83 +93,97 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-const CATEGORIAS = ['Nome', 'Objeto', 'Cor', 'Legumes', 'Filmes', 'Cidade', 'País'];
+const CATEGORIAS = ['Nome', 'Lugar', 'Objeto', 'Animal', 'Fruta', 'Verdura', 'Cor'];
 let salaAtual = null;
 let meuId = 'p_' + Math.random().toString(36).slice(2,8);
 let meuNome = '';
 let timerInterval = null;
 
-window.entrarSala = function() {
+window.entrarSala = async function() {
   meuNome = document.getElementById('nome').value.trim();
   salaAtual = document.getElementById('sala').value.trim().toUpperCase();
-  if(!meuNome ||!salaAtual) return alert('Preenche nome e código da sala');
+  const senha = document.getElementById('senha').value.trim();
+  if(!meuNome ||!salaAtual ||!senha) return alert('Preenche tudo');
 
-  const playerRef = ref(db, `stop/${salaAtual}/players/${meuId}`);
-  set(playerRef, {nome: meuNome, score: 0});
+  const salaRef = ref(db, `stop/${salaAtual}`);
+  const snap = await get(salaRef);
+
+  if(!snap.exists()) {
+    await set(salaRef, {
+      senha: senha,
+      players: { [meuId]: {nome: meuNome, score: 0} }
+    });
+  } else {
+    const data = snap.val();
+    if(data.senha!== senha) return alert('Senha errada!');
+    if(Object.keys(data.players || {}).length >= 2) return alert('Sala cheia! Máx 2 jogadores');
+    await update(ref(db, `stop/${salaAtual}/players/${meuId}`), {nome: meuNome, score: 0});
+  }
 
   document.getElementById('lobby').classList.add('hidden');
   document.getElementById('game').classList.remove('hidden');
   log(`Você entrou na sala ${salaAtual}`);
   escutarSala();
-  window.onbeforeunload = () => remove(playerRef);
+  window.onbeforeunload = () => remove(ref(db, `stop/${salaAtual}/players/${meuId}`));
 }
 
 function escutarSala() {
-  const salaRef = ref(db, `stop/${salaAtual}`);
-  onValue(salaRef, (snap) => {
+  onValue(ref(db, `stop/${salaAtual}`), (snap) => {
     const data = snap.val();
     if(!data) return;
 
     const players = data.players || {};
-    const playerCount = Object.keys(players).length;
+    const ids = Object.keys(players);
 
-    document.getElementById('players').innerHTML = Object.entries(players)
-   .map(([id,p]) => `<div class="player ${id===meuId?'you':''}">${p.nome} - ${p.score||0}pts</div>`)
-   .join('');
+    // Atualiza cards dos jogadores com barra de pontos
+    const maxScore = Math.max(...ids.map(id => players[id].score || 0), 1);
+    document.getElementById('players').innerHTML = ids.map((id,i) => `
+      <div class="player-card ${id===meuId?'you':''}">
+        <div><b>${players[id].nome}</b></div>
+        <div>${players[id].score || 0} pts</div>
+        <div class="score-bar">
+          <div class="score-fill" style="width:${(players[id].score||0)/maxScore*100}%"></div>
+        </div>
+      </div>
+    `).join('');
 
-    if(playerCount >= 2 &&!data.rodada) {
-      if(Object.keys(players)[0] === meuId) {
-        document.getElementById('preGame').classList.remove('hidden');
-      }
-      document.getElementById('status').textContent = 'Pronto pra começar';
+    // Libera começar se tiver 2 jogadores
+    if(ids.length >= 2 &&!data.rodada) {
+      if(ids[0] === meuId) document.getElementById('preGame').classList.remove('hidden');
     }
 
     if(data.rodada) {
-      atualizarRodada(data.rodada);
+      atualizarRodada(data.rodada, players);
     }
-
-    atualizarScoreboard(players);
   });
 }
 
 window.iniciarRodada = function() {
-  const letras = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const letras = 'BCDFGHJKLMNPQRSTVWXYZ';
   const letra = letras[Math.floor(Math.random() * letras.length)];
 
-  const rodada = {
+  set(ref(db, `stop/${salaAtual}/rodada`), {
     letra: letra,
     status: 'jogando',
     inicio: Date.now(),
     duracao: 600000,
-    respostas: {},
-    parouPor: null
-  };
-
-  set(ref(db, `stop/${salaAtual}/rodada`), rodada);
+    respostas: {}
+  });
 }
 
-function atualizarRodada(rodada) {
+function atualizarRodada(rodada, players) {
   const agora = Date.now();
   const tempoRestante = Math.max(0, rodada.duracao - (agora - rodada.inicio));
 
   if(rodada.status === 'jogando') {
     document.getElementById('playArea').classList.remove('hidden');
     document.getElementById('preGame').classList.add('hidden');
+    document.getElementById('resultArea').classList.add('hidden');
     document.getElementById('letra').textContent = rodada.letra;
 
     if(!document.getElementById('cats').innerHTML) {
       document.getElementById('cats').innerHTML = CATEGORIAS.map(cat =>
-        `<div class="cat"><label>${cat}:</label><input id="cat_${cat}" placeholder="${rodada.letra}..."></div>`
+        `<div class="cat"><label>${cat}</label><input id="cat_${cat}" placeholder="${rodada.letra}..."></div>`
       ).join('');
     }
 
@@ -182,122 +205,87 @@ function atualizarRodada(rodada) {
   if(rodada.status === 'conferencia') {
     clearInterval(timerInterval);
     document.getElementById('playArea').classList.add('hidden');
-    document.getElementById('conferencia').classList.remove('hidden');
-    montarConferencia(rodada);
+    document.getElementById('resultArea').classList.remove('hidden');
+    mostrarResultados(rodada.respostas, players, rodada.letra);
   }
 }
 
 window.pararJogo = function() {
-  update(ref(db, `stop/${salaAtual}/rodada`), {
-    status: 'conferencia',
-    parouPor: meuId
-  });
   salvarRespostas();
+  update(ref(db, `stop/${salaAtual}/rodada`), { status: 'conferencia' });
 }
 
 function finalizarTempo() {
   clearInterval(timerInterval);
-  update(ref(db, `stop/${salaAtual}/rodada`), {
-    status: 'conferencia'
-  });
   salvarRespostas();
+  update(ref(db, `stop/${salaAtual}/rodada`), { status: 'conferencia' });
 }
 
 function salvarRespostas() {
   const respostas = {};
   CATEGORIAS.forEach(cat => {
-    const val = document.getElementById(`cat_${cat}`)?.value.trim() || '';
-    respostas[cat] = val;
+    respostas[cat] = document.getElementById(`cat_${cat}`)?.value.trim() || '';
   });
   set(ref(db, `stop/${salaAtual}/rodada/respostas/${meuId}`), respostas);
 }
 
-let playersCache = {};
-function montarConferencia(rodada) {
-  const container = document.getElementById('listaRespostas');
-  let html = '';
+function mostrarResultados(respostas, players, letra) {
+  const ids = Object.keys(players);
+  const r1 = respostas[ids[0]] || {};
+  const r2 = respostas[ids[1]] || {};
+  const l = letra.toLowerCase();
+
+  let html = `<tr><th>Categoria</th><th>${players[ids[0]].nome}</th><th>${players[ids[1]]?.nome || '-'}</th></tr>`;
+  let pontos1 = 0, pontos2 = 0;
 
   CATEGORIAS.forEach(cat => {
-    html += `<h4>${cat}</h4>`;
-    Object.entries(rodada.respostas || {}).forEach(([pid, resp]) => {
-      const palavra = resp[cat] || '-';
-      const nome = playersCache[pid]?.nome || pid;
-      html += `<div style="margin:6px 0">
-        <input type="checkbox" id="chk_${pid}_${cat}" checked>
-        <label for="chk_${pid}_${cat}">${nome}: ${palavra}</label>
-      </div>`;
-    });
+    const val1 = (r1[cat] || '').toLowerCase().trim();
+    const val2 = (r2[cat] || '').toLowerCase().trim();
+
+    let p1 = 0, p2 = 0;
+    if(val1 && val1.startsWith(l)) {
+      p1 = (val1 === val2)? 5 : 10;
+      if(val2!== val1) pontos1 += p1;
+    }
+    if(val2 && val2.startsWith(l)) {
+      p2 = (val2 === val1)? 5 : 10;
+      if(val1!== val2) pontos2 += p2;
+    }
+
+    html += `<tr>
+      <td>${cat}</td>
+      <td class="points-${p1}">${r1[cat] || '-'} (${p1})</td>
+      <td class="points-${p2}">${r2[cat] || '-'} (${p2})</td>
+    </tr>`;
   });
 
-  container.innerHTML = html;
+  html += `<tr><td><b>Total</b></td><td><b>${pontos1}</b></td><td><b>${pontos2}</b></td></tr>`;
+  document.getElementById('resultTable').innerHTML = html;
+
+  // Salva pontos no Firebase
+  update(ref(db, `stop/${salaAtual}/players/${ids[0]}`), { score: players[ids[0]].score + pontos1 });
+  if(ids[1]) update(ref(db, `stop/${salaAtual}/players/${ids[1]}`), { score: players[ids[1]].score + pontos2 });
 }
 
-window.finalizarRodada = function() {
-  const rodadaRef = ref(db, `stop/${salaAtual}/rodada`);
-  get(rodadaRef).then(snap => {
-    const rodada = snap.val();
-    const pontos = calcularPontos(rodada);
+window.proximaRodada = async function() {
+  await remove(ref(db, `stop/${salaAtual}/rodada`));
+  document.getElementById('resultArea').classList.add('hidden');
+  document.getElementById('cats').innerHTML = '';
+}
 
-    Object.entries(pontos).forEach(([pid, pts]) => {
-      const scoreRef = ref(db, `stop/${salaAtual}/players/${pid}/score`);
-      get(scoreRef).then(s => {
-        const atual = s.val() || 0;
-        set(scoreRef, atual + pts);
-      });
-    });
-
-    log('Rodada finalizada! Nova rodada em 5s...');
-    setTimeout(() => {
-      remove(rodadaRef);
-      document.getElementById('conferencia').classList.add('hidden');
-      document.getElementById('playArea').classList.add('hidden');
-      document.getElementById('cats').innerHTML = '';
-    }, 5000);
+window.reiniciarPartida = async function() {
+  const players = (await get(ref(db, `stop/${salaAtual}/players`))).val();
+  Object.keys(players).forEach(id => {
+    update(ref(db, `stop/${salaAtual}/players/${id}`), { score: 0 });
   });
+  await remove(ref(db, `stop/${salaAtual}/rodada`));
+  document.getElementById('resultArea').classList.add('hidden');
+  document.getElementById('cats').innerHTML = '';
+  log('Partida reiniciada!');
 }
 
-function calcularPontos(rodada) {
-  const pontos = {};
-  const respostas = rodada.respostas || {};
-  const letra = rodada.letra.toLowerCase();
-
-  CATEGORIAS.forEach(cat => {
-    const palavras = {};
-
-    Object.entries(respostas).forEach(([pid, resp]) => {
-      let palavra = (resp[cat] || '').toLowerCase();
-      palavra = removerAcento(palavra).trim();
-
-      if(!palavra ||!palavra.startsWith(letra)) {
-        palavras[pid] = {pts: 0};
-        return;
-      }
-
-      let repeticoes = 0;
-      Object.values(respostas).forEach(r => {
-        if(removerAcento(r[cat]||'').toLowerCase().trim() === palavra) repeticoes++;
-      });
-
-      palavras[pid] = {pts: repeticoes === 1? 10 : 5};
-    });
-
-    Object.entries(palavras).forEach(([pid, p]) => {
-      pontos[pid] = (pontos[pid] || 0) + p.pts;
-    });
-  });
-
-  return pontos;
-}
-
-function removerAcento(str) {
-  return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-}
-
-function atualizarScoreboard(players) {
-  playersCache = players;
-  const sorted = Object.entries(players).sort((a,b) => (b[1].score||0) - (a[1].score||0));
-  document.getElementById('scoreboard').innerHTML = '<h4>Placar</h4>' +
-    sorted.map(([id,p]) => `<div class="score-row"><span>${p.nome}</span><span>${p.score||0} pts</span></div>`).join('');
+window.novaPartida = function() {
+  location.reload();
 }
 
 function log(msg) {
