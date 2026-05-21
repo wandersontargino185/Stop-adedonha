@@ -12,6 +12,7 @@
   h1,h2,h3{text-align:center;margin-bottom:12px}
   input,button,select{width:100%;padding:14px;border-radius:12px;border:none;font-size:15px;margin-top:10px}
   input,select{background:rgba(255,255,255,0.1);color:white;border:1px solid rgba(255,255,255,0.2)}
+  input:disabled{background:rgba(255,255,255,0.05);opacity:0.6}
   button{background:linear-gradient(135deg,#8b5cf6,#7c3aed);color:white;font-weight:700;cursor:pointer;transition:0.3s}
   button:hover{transform:translateY(-2px)}
   button:disabled{opacity:0.5;cursor:not-allowed}
@@ -22,7 +23,22 @@
 .players{display:flex;gap:12px;justify-content:space-around;margin:16px 0;flex-wrap:wrap}
 .player-card{background:rgba(255,255,255,0.15);padding:16px;border-radius:16px;text-align:center;min-width:140px}
 .player-card.you{border:2px solid #8b5cf6}
-.player-card.ready{border:2px solid #22c55e;animation:pulse 1s infinite}
+..player-card.ready{
+  border:2px solid #22c55e;
+  background:rgba(34,197,94,0.15);
+  box-shadow:0 0 20px rgba(34,197,94,0.6), 0 0 40px rgba(34,197,94,0.3);
+  animation:pulseGlow 1.5s ease-in-out infinite;
+}
+@keyframes pulseGlow{
+ 0%,100%{
+    box-shadow:0 0 15px rgba(34,197,94,0.5), 0 0 30px rgba(34,197,94,0.2);
+    transform:scale(1);
+  }
+ 50%{
+    box-shadow:0 0 25px rgba(34,197,94,0.8), 0 0 50px rgba(34,197,94,0.4);
+    transform:scale(1.02);
+  }
+}
 .player-card.leader{border:2px solid #fbbf24}
 @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,0.7)}50%{box-shadow:0 0 0 10px rgba(34,197,94,0)}}
 .timer{font-size:32px;font-weight:700;text-align:center;color:#fbbf24;margin:12px 0}
@@ -65,6 +81,9 @@
 .solo-player{background:rgba(255,255,255,0.1);padding:16px;border-radius:16px}
 .solo-player h4{text-align:center;margin-bottom:8px;color:#22d3ee}
 .error-msg{background:#ef4444;padding:12px;border-radius:12px;margin-top:10px;display:none}
+.final-ranking{background:rgba(255,255,255,0.1);padding:20px;border-radius:16px;margin-top:16px}
+.final-ranking h2{color:#fbbf24;margin-bottom:16px}
+.loaded-status{color:#22c55e;font-size:14px;margin-top:5px}
 @media(max-width:800px){.solo-mode{grid-template-columns:1fr}}
 </style>
 </head>
@@ -115,10 +134,11 @@
       <div class="timer" id="timer">5:00</div>
       <div class="letter" id="letra">A</div>
       <div id="categoryContainer"></div>
-      <button id="stopBtn" onclick="pararJogo()">🛑 STOP!</button>
+      <button id="stopBtn" onclick="pararJogo()">🛑 Revelar</button>
     </div>
 
     <div id="revealArea" class="hidden"></div>
+    <div id="finalArea" class="hidden"></div>
 
     <div class="log" id="log"></div>
     <button onclick="voltarLobby()" class="danger">Voltar ao Lobby</button>
@@ -143,6 +163,7 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
 const CATEGORIAS = ['Nome', 'Lugar', 'Objeto', 'Animal', 'Fruta', 'Verdura', 'Cor'];
+const MAX_PLAYERS = 6;
 let salaAtual = null;
 let meuId = 'p_' + Math.random().toString(36).slice(2,8);
 let meuNome = '';
@@ -180,16 +201,11 @@ window.setMode = function(mode) {
 
 window.iniciarSolo = function() {
   const nome1 = document.getElementById('nomeSolo1').value.trim() || 'Jogador 1';
-  const nome2 = document.getElementById('nomeSolo2').value.trim() || 'Jogador 2';
+  const nome2 = document.getElementById('nomeSolo2').value.trim() || 'Bot';
 
   modoJogo = 'solo';
   document.getElementById('lobby').classList.add('hidden');
   document.getElementById('game').classList.remove('hidden');
-
-  const players = {
-    solo1: {nome: nome1, score: 0},
-    solo2: {nome: nome2, score: 0}
-  };
 
   salaAtual = 'SOLO';
   souLider = true;
@@ -197,9 +213,12 @@ window.iniciarSolo = function() {
   window.scoreSolo1 = 0;
   window.scoreSolo2 = 0;
 
-  atualizarPlayersSolo(players);
+  atualizarPlayersSolo({
+    solo1: {nome: nome1, score: 0},
+    solo2: {nome: nome2, score: 0}
+  });
   document.getElementById('preGame').classList.remove('hidden');
-  log('Modo Solo iniciado! Você controla os 2 jogadores.');
+  log('Modo Solo iniciado!');
 }
 
 function atualizarPlayersSolo(players) {
@@ -243,8 +262,8 @@ window.entrarSala = async function() {
         showError('Senha errada!');
         return;
       }
-      if(Object.keys(data.players || {}).length >= 2) {
-        showError('Sala cheia! Máximo 2 jogadores');
+      if(Object.keys(data.players || {}).length >= MAX_PLAYERS) {
+        showError(`Sala cheia! Máximo ${MAX_PLAYERS} jogadores`);
         return;
       }
       await update(ref(db, `stop/${salaAtual}/players/${meuId}`), {nome: meuNome, score: 0});
@@ -258,7 +277,7 @@ window.entrarSala = async function() {
 
   } catch(e) {
     console.error(e);
-    showError('Erro: ' + e.message + '. Verifica as regras do Firebase!');
+    showError('Erro: ' + e.message);
   }
 }
 
@@ -291,6 +310,10 @@ function escutarSala() {
 
     if(data.rodada) {
       atualizarRodada(data.rodada, players, data.lider);
+    }
+
+    if(data.finalizado) {
+      mostrarFinal(data.players);
     }
   }, (error) => {
     console.error(error);
@@ -340,8 +363,13 @@ function atualizarRodada(rodada, players, liderId) {
     document.getElementById('playArea').classList.remove('hidden');
     document.getElementById('preGame').classList.add('hidden');
     document.getElementById('revealArea').classList.add('hidden');
+    document.getElementById('finalArea').classList.add('hidden');
     document.getElementById('letra').textContent = rodada.letra;
-    mostrarCategoriaAtual(categoriaAtual, rodada.letra);
+
+    if(!document.getElementById('categoryContainer').innerHTML.includes(categoriaAtual)) {
+      mostrarCategoriaAtual(categoriaAtual, rodada.letra);
+    }
+    atualizarStatusCarregamento(rodada.revelado);
 
     const min = Math.floor(tempoRestante/60000);
     const seg = Math.floor((tempoRestante%60000)/1000);
@@ -378,8 +406,13 @@ function atualizarRodadaSolo(rodada) {
     document.getElementById('playArea').classList.remove('hidden');
     document.getElementById('preGame').classList.add('hidden');
     document.getElementById('revealArea').classList.add('hidden');
+    document.getElementById('finalArea').classList.add('hidden');
     document.getElementById('letra').textContent = rodada.letra;
-    mostrarCategoriaSolo(categoriaAtual, rodada.letra);
+
+    if(!document.getElementById('categoryContainer').innerHTML.includes(categoriaAtual)) {
+      mostrarCategoriaSolo(categoriaAtual, rodada.letra);
+    }
+    atualizarStatusCarregamento(rodada.revelado);
 
     const min = Math.floor(tempoRestante/60000);
     const seg = Math.floor((tempoRestante%60000)/1000);
@@ -405,6 +438,22 @@ function atualizarRodadaSolo(rodada) {
   }
 }
 
+function atualizarStatusCarregamento(revelado) {
+  const categoria = CATEGORIAS[categoriaAtualIndex];
+  const input = document.getElementById(`input_${categoria}`);
+  const btn = document.getElementById('carregarBtn');
+  const statusDiv = document.getElementById('statusCarregado');
+
+  if(revelado && revelado[meuId]) {
+    if(input) input.disabled = true;
+    if(btn) {
+      btn.disabled = true;
+      btn.textContent = 'Carregado';
+    }
+    if(statusDiv) statusDiv.innerHTML = '✓ Você já carregou!';
+  }
+}
+
 function mostrarCategoriaAtual(categoria, letra) {
   document.getElementById('phaseName').textContent = categoria;
   document.getElementById('phaseBanner').classList.remove('hidden');
@@ -413,7 +462,8 @@ function mostrarCategoriaAtual(categoria, letra) {
     <div class="category-reveal">
       <h3>${categoria}</h3>
       <input id="input_${categoria}" placeholder="${letra}...">
-      <button onclick="revelarCategoria()" id="revealBtn">Revelar</button>
+      <button onclick="carregarCategoria()" id="carregarBtn">Carregar</button>
+      <div id="statusCarregado" class="loaded-status"></div>
     </div>
   `;
 }
@@ -433,17 +483,23 @@ function mostrarCategoriaSolo(categoria, letra) {
         <input id="input_solo2_${categoria}" placeholder="${letra}...">
       </div>
     </div>
-    <button onclick="revelarCategoriaSolo()" id="revealBtn">Revelar Ambos</button>
+    <button onclick="revelarCategoriaSolo()" id="carregarBtn">Carregar Ambos</button>
   `;
 }
 
-window.revelarCategoria = async function() {
+window.carregarCategoria = async function() {
   const categoria = CATEGORIAS[categoriaAtualIndex];
   const valor = document.getElementById(`input_${categoria}`).value.trim();
+
+  if(!valor) return alert('Digite algo!');
+
   await set(ref(db, `stop/${salaAtual}/rodada/respostas/${meuId}/${categoria}`), valor);
   await update(ref(db, `stop/${salaAtual}/rodada/revelado/${meuId}`), true);
-  document.getElementById('revealBtn').disabled = true;
-  document.getElementById('revealBtn').textContent = 'Aguardando outros...';
+
+  document.getElementById('input_' + categoria).disabled = true;
+  document.getElementById('carregarBtn').disabled = true;
+  document.getElementById('carregarBtn').textContent = 'Carregado';
+  document.getElementById('statusCarregado').innerHTML = '✓ Você já carregou!';
 
   const rodadaSnap = await get(ref(db, `stop/${salaAtual}/rodada`));
   const rodada = rodadaSnap.val();
@@ -567,10 +623,6 @@ function confirmarCategoriaSolo() {
   const rodada = window.rodadaSolo;
   const categoria = CATEGORIAS[rodada.categoriaIndex];
   const pontosEditados = window.pontosEditados || {};
-  const players = {
-    solo1: {nome: document.getElementById('nomeSolo1').value, score: window.scoreSolo1 || 0},
-    solo2: {nome: document.getElementById('nomeSolo2').value, score: window.scoreSolo2 || 0}
-  };
 
   const valores = Object.entries(rodada.respostas || {}).map(([id, resp]) => {
     let val = removerAcento((resp[categoria] || '').toLowerCase().trim());
@@ -590,8 +642,8 @@ function confirmarCategoriaSolo() {
   proximaCategoriaOuFim(rodada);
   window.pontosEditados = {};
   atualizarPlayersSolo({
-    solo1: {nome: players.solo1.nome, score: window.scoreSolo1},
-    solo2: {nome: players.solo2.nome, score: window.scoreSolo2}
+    solo1: {nome: document.getElementById('nomeSolo1').value, score: window.scoreSolo1},
+    solo2: {nome: document.getElementById('nomeSolo2').value, score: window.scoreSolo2}
   });
 }
 
@@ -619,11 +671,68 @@ function proximaCategoriaOuFim(rodada) {
     }
   } else {
     if(modoJogo==='solo') {
-      log('Rodada finalizada!');
+      mostrarFinal({
+        solo1: {nome: document.getElementById('nomeSolo1').value, score: window.scoreSolo1},
+        solo2: {nome: document.getElementById('nomeSolo2').value, score: window.scoreSolo2}
+      });
     } else {
-      remove(ref(db, `stop/${salaAtual}/rodada`));
-      log('Rodada finalizada!');
+      update(ref(db, `stop/${salaAtual}`), {finalizado: true});
     }
+  }
+}
+
+function mostrarFinal(players) {
+  document.getElementById('revealArea').classList.add('hidden');
+  document.getElementById('playArea').classList.add('hidden');
+  document.getElementById('finalArea').classList.remove('hidden');
+
+  const ranking = Object.entries(players)
+.map(([id,p]) => ({...p,id}))
+.sort((a,b) => b.score - a.score);
+
+  let html = `<div class="final-ranking">
+    <h2>🏆 Ranking Final</h2>
+    <table class="reveal-table">
+      <tr><th>Posição</th><th>Jogador</th><th>Pontos</th></tr>`;
+
+  ranking.forEach((p,i) => {
+    html += `<tr>
+      <td>${i+1}º</td>
+      <td>${p.nome} ${i===0?'👑':''}</td>
+      <td>${p.score}</td>
+    </tr>`;
+  });
+
+  html += `</table>`;
+
+  if(souLider) {
+    html += `<button class="success" onclick="novoJogo()">🔄 Novo Jogo</button>`;
+  }
+  html += `</div>`;
+
+  document.getElementById('finalArea').innerHTML = html;
+  log('Jogo finalizado!');
+}
+
+window.novoJogo = async function() {
+  if(modoJogo==='solo') {
+    window.scoreSolo1 = 0;
+    window.scoreSolo2 = 0;
+    document.getElementById('finalArea').classList.add('hidden');
+    document.getElementById('preGame').classList.remove('hidden');
+    atualizarPlayersSolo({
+      solo1: {nome: document.getElementById('nomeSolo1').value, score: 0},
+      solo2: {nome: document.getElementById('nomeSolo2').value, score: 0}
+    });
+  } else {
+    await update(ref(db, `stop/${salaAtual}`), {
+      finalizado: null,
+      rodada: null,
+      players: Object.fromEntries(
+        Object.entries((await get(ref(db, `stop/${salaAtual}/players`))).val() || {})
+     .map(([id,p]) => [id, {...p, score: 0}])
+      )
+    });
   }
 }
 
@@ -632,35 +741,30 @@ window.pararJogo = async function() {
     window.rodadaSolo.status = 'revelando';
     atualizarRodadaSolo(window.rodadaSolo);
   } else {
-    await update(ref(db, `stop/${salaAtual}/rodada`), {status: 'revelando', duracao: 0});
+    await update(ref(db, `stop/${salaAtual}/rodada`), {status: 'revelando', duracao: 1000});
   }
 }
 
-async function finalizarTempo() {
-  clearInterval(timerInterval);
-  if(modoJogo==='solo') {
-    window.rodadaSolo.status = 'revelando';
-    atualizarRodadaSolo(window.rodadaSolo);
-  } else {
-    await update(ref(db, `stop/${salaAtual}/rodada`), {status: 'revelando', duracao: 0});
-  }
+function finalizarTempo() {
+  update(ref(db, `stop/${salaAtual}/rodada`), {status: 'revelando', duracao: 0});
 }
 
 function finalizarTempoSolo() {
-  clearInterval(timerInterval);
   window.rodadaSolo.status = 'revelando';
   atualizarRodadaSolo(window.rodadaSolo);
 }
 
 function removerAcento(str) {
-  return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 
 window.voltarLobby = function() {
-  document.getElementById('phaseBanner').classList.add('hidden');
-  if(listenerSala) listenerSala();
-  if(timerInterval) clearInterval(timerInterval);
-  location.reload();
+  if(confirm('Tem certeza que quer sair da sala?')) {
+    if(modoJogo==='multi' && salaAtual) {
+      remove(ref(db, `stop/${salaAtual}/players/${meuId}`));
+    }
+    location.reload();
+  }
 }
 </script>
 </body>
