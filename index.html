@@ -43,10 +43,7 @@
  0%,100%{box-shadow:0 4px 20px rgba(139,92,246,0.4)}
  50%{box-shadow:0 4px 30px rgba(139,92,246,0.7)}
 }
-.phase-banner span{
-  color:#fbbf24;
-  font-size:24px;
-}
+.phase-banner span{color:#fbbf24;font-size:24px}
 .category-reveal{background:rgba(255,255,255,0.1);padding:20px;border-radius:16px;margin-top:16px}
 .reveal-table{width:100%;border-collapse:collapse;margin-top:12px}
 .reveal-table th,.reveal-table td{padding:12px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.2)}
@@ -67,6 +64,7 @@
 .solo-mode{display:grid;grid-template-columns:1fr 1fr;gap:20px}
 .solo-player{background:rgba(255,255,255,0.1);padding:16px;border-radius:16px}
 .solo-player h4{text-align:center;margin-bottom:8px;color:#22d3ee}
+.error-msg{background:#ef4444;padding:12px;border-radius:12px;margin-top:10px;display:none}
 @media(max-width:800px){.solo-mode{grid-template-columns:1fr}}
 </style>
 </head>
@@ -92,6 +90,7 @@
       <input type="text" id="sala" placeholder="Código da sala" maxlength="6">
       <input type="password" id="senha" placeholder="Senha da sala">
       <button onclick="entrarSala()">Entrar/Criar Sala</button>
+      <div id="errorMsg" class="error-msg"></div>
     </div>
 
     <div id="soloLobby" class="hidden">
@@ -151,7 +150,7 @@ let timerInterval = null;
 let categoriaAtualIndex = 0;
 let souLider = false;
 let modoJogo = 'multi';
-let soloIds = ['solo1', 'solo2'];
+let listenerSala = null;
 window.scoreSolo1 = 0;
 window.scoreSolo2 = 0;
 
@@ -159,6 +158,18 @@ function playSound(id){
   const audio = document.getElementById(id);
   audio.currentTime = 0;
   audio.play().catch(()=>{});
+}
+
+function showError(msg){
+  const errorDiv = document.getElementById('errorMsg');
+  errorDiv.textContent = msg;
+  errorDiv.style.display = 'block';
+  setTimeout(()=>errorDiv.style.display='none', 5000);
+}
+
+function log(msg) {
+  document.getElementById('log').innerHTML += msg + '<br>';
+  document.getElementById('log').scrollTop = 9999;
 }
 
 window.setMode = function(mode) {
@@ -193,7 +204,6 @@ window.iniciarSolo = function() {
 
 function atualizarPlayersSolo(players) {
   const ids = Object.keys(players);
-  const maxScore = Math.max(...ids.map(id => players[id].score || 0), 1);
   document.getElementById('players').innerHTML = ids.map(id => `
     <div class="player-card ${id===meuId?'you':''}">
       <div><b>${players[id].nome}</b></div>
@@ -203,41 +213,67 @@ function atualizarPlayersSolo(players) {
 }
 
 window.entrarSala = async function() {
-  modoJogo = 'multi';
-  meuNome = document.getElementById('nome').value.trim();
-  salaAtual = document.getElementById('sala').value.trim().toUpperCase();
-  const senha = document.getElementById('senha').value.trim();
-  if(!meuNome ||!salaAtual ||!senha) return alert('Preenche tudo');
+  try {
+    modoJogo = 'multi';
+    meuNome = document.getElementById('nome').value.trim();
+    salaAtual = document.getElementById('sala').value.trim().toUpperCase();
+    const senha = document.getElementById('senha').value.trim();
 
-  const salaRef = ref(db, `stop/${salaAtual}`);
-  const snap = await get(salaRef);
+    if(!meuNome ||!salaAtual ||!senha) {
+      showError('Preenche nome, sala e senha');
+      return;
+    }
 
-  if(!snap.exists()) {
-    await set(salaRef, {
-      senha: senha,
-      lider: meuId,
-      players: { [meuId]: {nome: meuNome, score: 0} }
-    });
-    souLider = true;
-  } else {
-    const data = snap.val();
-    if(data.senha!== senha) return alert('Senha errada!');
-    if(Object.keys(data.players || {}).length >= 2) return alert('Sala cheia!');
-    await update(ref(db, `stop/${salaAtual}/players/${meuId}`), {nome: meuNome, score: 0});
-    souLider = data.lider === meuId;
+    log('Conectando na sala ' + salaAtual + '...');
+    const salaRef = ref(db, `stop/${salaAtual}`);
+    const snap = await get(salaRef);
+
+    if(!snap.exists()) {
+      await set(salaRef, {
+        senha: senha,
+        lider: meuId,
+        players: { [meuId]: {nome: meuNome, score: 0} },
+        createdAt: Date.now()
+      });
+      souLider = true;
+      log('Sala criada! Você é o líder 👑');
+    } else {
+      const data = snap.val();
+      if(data.senha!== senha) {
+        showError('Senha errada!');
+        return;
+      }
+      if(Object.keys(data.players || {}).length >= 2) {
+        showError('Sala cheia! Máximo 2 jogadores');
+        return;
+      }
+      await update(ref(db, `stop/${salaAtual}/players/${meuId}`), {nome: meuNome, score: 0});
+      souLider = data.lider === meuId;
+      log('Entrou na sala!');
+    }
+
+    document.getElementById('lobby').classList.add('hidden');
+    document.getElementById('game').classList.remove('hidden');
+    escutarSala();
+
+  } catch(e) {
+    console.error(e);
+    showError('Erro: ' + e.message + '. Verifica as regras do Firebase!');
   }
-
-  document.getElementById('lobby').classList.add('hidden');
-  document.getElementById('game').classList.remove('hidden');
-  escutarSala();
-  window.onbeforeunload = () => remove(ref(db, `stop/${salaAtual}/players/${meuId}`));
 }
 
 function escutarSala() {
   if(modoJogo==='solo') return;
-  onValue(ref(db, `stop/${salaAtual}`), (snap) => {
+  if(listenerSala) listenerSala();
+
+  listenerSala = onValue(ref(db, `stop/${salaAtual}`), (snap) => {
     const data = snap.val();
-    if(!data) return;
+    if(!data) {
+      log('Sala foi deletada');
+      voltarLobby();
+      return;
+    }
+
     const players = data.players || {};
     const ids = Object.keys(players);
 
@@ -249,12 +285,16 @@ function escutarSala() {
       </div>
     `).join('');
 
-    if(ids.length >= 2 &&!data.rodada) {
-      if(ids[0] === meuId) document.getElementById('preGame').classList.remove('hidden');
+    if(ids.length >= 2 &&!data.rodada && ids[0] === meuId) {
+      document.getElementById('preGame').classList.remove('hidden');
     }
+
     if(data.rodada) {
       atualizarRodada(data.rodada, players, data.lider);
     }
+  }, (error) => {
+    console.error(error);
+    showError('Erro de conexão: ' + error.message);
   });
 }
 
@@ -616,13 +656,10 @@ function removerAcento(str) {
   return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
 
-function log(msg) {
-  document.getElementById('log').innerHTML += msg + '<br>';
-  document.getElementById('log').scrollTop = 9999;
-}
-
 window.voltarLobby = function() {
   document.getElementById('phaseBanner').classList.add('hidden');
+  if(listenerSala) listenerSala();
+  if(timerInterval) clearInterval(timerInterval);
   location.reload();
 }
 </script>
