@@ -65,8 +65,6 @@
 .solo-player{background:rgba(255,255,255,0.1);padding:16px;border-radius:16px}
 .solo-player h4{text-align:center;margin-bottom:8px;color:#22d3ee}
 .error-msg{background:#ef4444;padding:12px;border-radius:12px;margin-top:10px;display:none}
-.final-ranking{background:rgba(255,255,255,0.1);padding:20px;border-radius:16px;margin-top:16px}
-.final-ranking h2{color:#fbbf24;margin-bottom:16px}
 @media(max-width:800px){.solo-mode{grid-template-columns:1fr}}
 </style>
 </head>
@@ -117,11 +115,10 @@
       <div class="timer" id="timer">5:00</div>
       <div class="letter" id="letra">A</div>
       <div id="categoryContainer"></div>
-      <button id="stopBtn" onclick="pararJogo()">🛑 Revelar</button>
+      <button id="stopBtn" onclick="pararJogo()">🛑 STOP!</button>
     </div>
 
     <div id="revealArea" class="hidden"></div>
-    <div id="finalArea" class="hidden"></div>
 
     <div class="log" id="log"></div>
     <button onclick="voltarLobby()" class="danger">Voltar ao Lobby</button>
@@ -146,7 +143,6 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
 const CATEGORIAS = ['Nome', 'Lugar', 'Objeto', 'Animal', 'Fruta', 'Verdura', 'Cor'];
-const MAX_PLAYERS = 6;
 let salaAtual = null;
 let meuId = 'p_' + Math.random().toString(36).slice(2,8);
 let meuNome = '';
@@ -184,7 +180,7 @@ window.setMode = function(mode) {
 
 window.iniciarSolo = function() {
   const nome1 = document.getElementById('nomeSolo1').value.trim() || 'Jogador 1';
-  const nome2 = document.getElementById('nomeSolo2').value.trim() || 'Bot';
+  const nome2 = document.getElementById('nomeSolo2').value.trim() || 'Jogador 2';
 
   modoJogo = 'solo';
   document.getElementById('lobby').classList.add('hidden');
@@ -203,7 +199,7 @@ window.iniciarSolo = function() {
 
   atualizarPlayersSolo(players);
   document.getElementById('preGame').classList.remove('hidden');
-  log('Modo Solo iniciado!');
+  log('Modo Solo iniciado! Você controla os 2 jogadores.');
 }
 
 function atualizarPlayersSolo(players) {
@@ -247,8 +243,8 @@ window.entrarSala = async function() {
         showError('Senha errada!');
         return;
       }
-      if(Object.keys(data.players || {}).length >= MAX_PLAYERS) {
-        showError('Sala cheia! Máximo 6 jogadores');
+      if(Object.keys(data.players || {}).length >= 2) {
+        showError('Sala cheia! Máximo 2 jogadores');
         return;
       }
       await update(ref(db, `stop/${salaAtual}/players/${meuId}`), {nome: meuNome, score: 0});
@@ -262,7 +258,7 @@ window.entrarSala = async function() {
 
   } catch(e) {
     console.error(e);
-    showError('Erro: ' + e.message);
+    showError('Erro: ' + e.message + '. Verifica as regras do Firebase!');
   }
 }
 
@@ -295,10 +291,6 @@ function escutarSala() {
 
     if(data.rodada) {
       atualizarRodada(data.rodada, players, data.lider);
-    }
-
-    if(data.finalizado) {
-      mostrarFinal(data.players);
     }
   }, (error) => {
     console.error(error);
@@ -348,7 +340,6 @@ function atualizarRodada(rodada, players, liderId) {
     document.getElementById('playArea').classList.remove('hidden');
     document.getElementById('preGame').classList.add('hidden');
     document.getElementById('revealArea').classList.add('hidden');
-    document.getElementById('finalArea').classList.add('hidden');
     document.getElementById('letra').textContent = rodada.letra;
     mostrarCategoriaAtual(categoriaAtual, rodada.letra);
 
@@ -387,7 +378,6 @@ function atualizarRodadaSolo(rodada) {
     document.getElementById('playArea').classList.remove('hidden');
     document.getElementById('preGame').classList.add('hidden');
     document.getElementById('revealArea').classList.add('hidden');
-    document.getElementById('finalArea').classList.add('hidden');
     document.getElementById('letra').textContent = rodada.letra;
     mostrarCategoriaSolo(categoriaAtual, rodada.letra);
 
@@ -423,7 +413,7 @@ function mostrarCategoriaAtual(categoria, letra) {
     <div class="category-reveal">
       <h3>${categoria}</h3>
       <input id="input_${categoria}" placeholder="${letra}...">
-      <button onclick="carregarCategoria()" id="carregarBtn">Carregar</button>
+      <button onclick="revelarCategoria()" id="revealBtn">Revelar</button>
     </div>
   `;
 }
@@ -443,17 +433,17 @@ function mostrarCategoriaSolo(categoria, letra) {
         <input id="input_solo2_${categoria}" placeholder="${letra}...">
       </div>
     </div>
-    <button onclick="revelarCategoriaSolo()" id="carregarBtn">Carregar Ambos</button>
+    <button onclick="revelarCategoriaSolo()" id="revealBtn">Revelar Ambos</button>
   `;
 }
 
-window.carregarCategoria = async function() {
+window.revelarCategoria = async function() {
   const categoria = CATEGORIAS[categoriaAtualIndex];
   const valor = document.getElementById(`input_${categoria}`).value.trim();
   await set(ref(db, `stop/${salaAtual}/rodada/respostas/${meuId}/${categoria}`), valor);
   await update(ref(db, `stop/${salaAtual}/rodada/revelado/${meuId}`), true);
-  document.getElementById('carregarBtn').disabled = true;
-  document.getElementById('carregarBtn').textContent = 'Carregado!';
+  document.getElementById('revealBtn').disabled = true;
+  document.getElementById('revealBtn').textContent = 'Aguardando outros...';
 
   const rodadaSnap = await get(ref(db, `stop/${salaAtual}/rodada`));
   const rodada = rodadaSnap.val();
@@ -629,68 +619,11 @@ function proximaCategoriaOuFim(rodada) {
     }
   } else {
     if(modoJogo==='solo') {
-      mostrarFinal({
-        solo1: {nome: document.getElementById('nomeSolo1').value, score: window.scoreSolo1},
-        solo2: {nome: document.getElementById('nomeSolo2').value, score: window.scoreSolo2}
-      });
+      log('Rodada finalizada!');
     } else {
-      update(ref(db, `stop/${salaAtual}`), {finalizado: true});
+      remove(ref(db, `stop/${salaAtual}/rodada`));
+      log('Rodada finalizada!');
     }
-  }
-}
-
-function mostrarFinal(players) {
-  document.getElementById('revealArea').classList.add('hidden');
-  document.getElementById('playArea').classList.add('hidden');
-  document.getElementById('finalArea').classList.remove('hidden');
-
-  const ranking = Object.entries(players)
-   .map(([id,p]) => ({...p,id}))
-   .sort((a,b) => b.score - a.score);
-
-  let html = `<div class="final-ranking">
-    <h2>🏆 Ranking Final</h2>
-    <table class="reveal-table">
-      <tr><th>Posição</th><th>Jogador</th><th>Pontos</th></tr>`;
-
-  ranking.forEach((p,i) => {
-    html += `<tr>
-      <td>${i+1}º</td>
-      <td>${p.nome} ${i===0?'👑':''}</td>
-      <td>${p.score}</td>
-    </tr>`;
-  });
-
-  html += `</table>`;
-
-  if(souLider) {
-    html += `<button class="success" onclick="novoJogo()">🔄 Novo Jogo</button>`;
-  }
-  html += `</div>`;
-
-  document.getElementById('finalArea').innerHTML = html;
-  log('Jogo finalizado!');
-}
-
-window.novoJogo = async function() {
-  if(modoJogo==='solo') {
-    window.scoreSolo1 = 0;
-    window.scoreSolo2 = 0;
-    document.getElementById('finalArea').classList.add('hidden');
-    document.getElementById('preGame').classList.remove('hidden');
-    atualizarPlayersSolo({
-      solo1: {nome: document.getElementById('nomeSolo1').value, score: 0},
-      solo2: {nome: document.getElementById('nomeSolo2').value, score: 0}
-    });
-  } else {
-    await update(ref(db, `stop/${salaAtual}`), {
-      finalizado: null,
-      rodada: null,
-      players: Object.fromEntries(
-        Object.entries((await get(ref(db, `stop/${salaAtual}/players`))).val() || {})
-       .map(([id,p]) => [id, {...p, score: 0}])
-      )
-    });
   }
 }
 
