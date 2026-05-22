@@ -736,14 +736,32 @@ window.novoJogo = async function() {
   }
 }
 
-window.pararJogo = async function() {
-  if(modoJogo==='solo') {
-    window.rodadaSolo.status = 'revelando';
-    atualizarRodadaSolo(window.rodadaSolo);
-  } else {
-    await update(ref(db, `stop/${salaAtual}/rodada`), {status: 'revelando', duracao: 1000});
+window.voltarLobby = async function() {
+  if(!confirm('Tem certeza que quer sair da sala? Se você é o líder, a sala será fechada pra todos.')) {
+    return;
   }
+
+  if(modoJogo==='multi' && salaAtual) {
+    if(souLider) {
+      // Líder saiu = apaga a sala inteira
+      await remove(ref(db, `stop/${salaAtual}`));
+      log('Sala fechada pelo líder');
+    } else {
+      // Jogador comum só sai
+      await remove(ref(db, `stop/${salaAtual}/players/${meuId}`));
+    }
+  }
+  
+  location.reload();
 }
+
+// Apaga a sala se o líder fechar a aba/fechar o jogo
+window.addEventListener('beforeunload', async (e) => {
+  if(modoJogo==='multi' && souLider && salaAtual) {
+    // Remove a sala inteira
+    await remove(ref(db, `stop/${salaAtual}`));
+  }
+});
 
 function finalizarTempo() {
   update(ref(db, `stop/${salaAtual}/rodada`), {status: 'revelando', duracao: 0});
