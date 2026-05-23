@@ -3,429 +3,311 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Stop Multiplayer</title>
+<title>Stop Online</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Arial,sans-serif}
-body{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);min-height:100vh;display:flex;justify-content:center;align-items:center;padding:20px}
-.container{background:rgba(255,255,255,0.95);border-radius:20px;padding:30px;box-shadow:0 20px 60px rgba(0,0,0,0.3);max-width:900px;width:100%}
-h1{text-align:center;color:#667eea;margin-bottom:20px;font-size:2.5em}
-.mode-select{display:flex;gap:15px;justify-content:center;margin-bottom:20px}
-.btn{padding:12px 30px;border:none;border-radius:10px;font-size:16px;font-weight:bold;cursor:pointer;transition:all 0.3s}
-.btn-primary{background:#667eea;color:white}
-.btn-primary:hover{background:#5568d3;transform:translateY(-2px)}
-.btn-success{background:#48bb78;color:white}
-.btn-danger{background:#f56565;color:white}
-.btn-secondary{background:#a0aec0;color:white}
-.btn:disabled{opacity:0.5;cursor:not-allowed}
+  *{margin:0;padding:0;box-sizing:border-box;font-family:Inter,Arial,sans-serif}
+  body{background:#0f172a;color:#f8fafc;display:flex;justify-content:center;align-items:center;min-height:100vh;padding:16px}
+.box{width:100%;max-width:600px;background:rgba(255,255,255,0.08);backdrop-filter:blur(14px);
+    border:1px solid rgba(255,255,255,0.12);border-radius:24px;padding:20px}
+  h1{font-size:22px;text-align:center;margin-bottom:12px}
+  input,button{width:100%;padding:14px;border-radius:12px;border:none;font-size:15px;margin-top:10px}
+  input{background:rgba(255,255,255,0.1);color:white;border:1px solid rgba(255,255,255,0.2)}
+  button{background:linear-gradient(135deg,#8b5cf6,#7c3aed);color:white;font-weight:700;cursor:pointer}
+  button:disabled{opacity:0.5;cursor:not-allowed}
 .hidden{display:none}
-.input-group{margin-bottom:15px}
-.input-group label{display:block;margin-bottom:5px;color:#4a5568;font-weight:600}
-.input-group input{width:100%;padding:10px;border:2px solid #e2e8f0;border-radius:8px;font-size:16px}
-.input-group input:disabled{background:#f7fafc;color:#a0aec0}
-.game-area{margin-top:20px}
-.categoria{display:flex;align-items:center;gap:10px;margin-bottom:15px;padding:15px;background:#f7fafc;border-radius:10px}
-.categoria label{flex:0 0 150px;font-weight:600;color:#4a5568}
-.categoria input{flex:1;padding:10px;border:2px solid #e2e8f0;border-radius:8px}
-.player-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:20px}
-.player-card{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;padding:15px;border-radius:10px;text-align:center}
-.player-card.ready{border:2px solid #22c55e;background:rgba(34,197,94,0.15);box-shadow:0 0 20px rgba(34,197,94,0.6), 0 0 40px rgba(34,197,94,0.3);animation:pulseGlow 1.5s ease-in-out infinite}
-@keyframes pulseGlow{
- 0%,100%{box-shadow:0 0 15px rgba(34,197,94,0.5), 0 0 30px rgba(34,197,94,0.2);transform:scale(1)}
- 50%{box-shadow:0 0 25px rgba(34,197,94,0.8), 0 0 50px rgba(34,197,94,0.4);transform:scale(1.02)}
-}
-.score-board{background:#edf2f7;padding:15px;border-radius:10px;margin-top:20px}
-.score-item{display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid #e2e8f0}
-.timer{text-align:center;font-size:2em;font-weight:bold;color:#f56565;margin-bottom:20px}
-.loaded-status{color:#22c55e;font-size:14px;margin-top:5px}
-.reveal-table{width:100%;border-collapse:collapse;margin-top:15px}
-.reveal-table th,.reveal-table td{padding:10px;text-align:left;border-bottom:1px solid #e2e8f0}
-.reveal-table th{background:#667eea;color:white}
-.points-10{color:#48bb78;font-weight:bold}
-.points-5{color:#ed8936;font-weight:bold}
-.points-0{color:#f56565;font-weight:bold}
+.players{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+.player{background:rgba(255,255,255,0.1);padding:8px 12px;border-radius:12px;font-size:13px}
+.player.you{border:1px solid #8b5cf6}
+.timer{font-size:32px;font-weight:700;text-align:center;color:#fbbf24;margin:12px 0}
+.letter{font-size:48px;font-weight:800;text-align:center;color:#22d3ee;margin:8px 0}
+.cats{display:grid;gap:10px;margin-top:16px}
+.cat{display:flex;gap:8px;align-items:center}
+.cat label{width:90px;font-size:13px;color:#cbd5e1}
+.cat input{flex:1;margin:0}
+.log{background:rgba(0,0,0,0.3);padding:12px;border-radius:12px;max-height:200px;overflow:auto;font-size:13px;margin-top:12px}
+.scoreboard{background:rgba(0,0,0,0.2);padding:12px;border-radius:12px;margin-top:12px}
+.score-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.1)}
 </style>
 </head>
 <body>
-<div class="container">
-<h1>🎮 Stop Online</h1>
+<div class="box">
+  <h1>🔤 Stop Online</h1>
 
-<div id="menuArea">
-<div class="mode-select">
-<button class="btn btn-primary" onclick="selecionarModo('solo')">Modo Solo</button>
-<button class="btn btn-primary" onclick="selecionarModo('multi')">Multiplayer</button>
-</div>
+  <div id="lobby">
+    <input type="text" id="nome" placeholder="Seu nome" maxlength="12">
+    <input type="text" id="sala" placeholder="Código da sala" maxlength="6">
+    <button onclick="entrarSala()">Entrar/Criar Sala</button>
+  </div>
 
-<div id="multiOptions" class="hidden">
-<div class="input-group">
-<label>Criar ou Entrar na Sala</label>
-<input type="text" id="salaInput" placeholder="Nome da sala">
-</div>
-<button class="btn btn-success" onclick="criarSala()">Criar Sala</button>
-<button class="btn btn-primary" onclick="entrarSala()">Entrar na Sala</button>
-</div>
+  <div id="game" class="hidden">
+    <div class="players" id="players"></div>
+    <div id="status">Aguardando jogadores...</div>
 
-<div id="playerInfo" class="hidden">
-<div class="input-group">
-<label>Seu Nome</label>
-<input type="text" id="nomeInput" placeholder="Digite seu nome">
-</div>
-<button class="btn btn-success" onclick="iniciarJogo()">Começar</button>
-</div>
-</div>
+    <div id="preGame" class="hidden">
+      <button onclick="iniciarRodada()">🚀 Começar Rodada</button>
+    </div>
 
-<div id="lobbyArea" class="hidden">
-<h2>Sala: <span id="nomeSala"></span></h2>
-<p>Código da sala: <strong id="codigoSala"></strong></p>
-<div class="player-list" id="listaJogadores"></div>
-<button class="btn btn-success" id="startBtn" onclick="iniciarRodada()">Iniciar Jogo</button>
-<button class="btn btn-danger" onclick="voltarLobby()">Sair da Sala</button>
-</div>
+    <div id="playArea" class="hidden">
+      <div class="timer" id="timer">10:00</div>
+      <div class="letter" id="letra">A</div>
+      <div class="cats" id="cats"></div>
+      <button onclick="pararJogo()">🛑 STOP!</button>
+    </div>
 
-<div id="gameArea" class="hidden">
-<div class="timer" id="timer">60s</div>
-<div class="game-area" id="playArea">
-<h3>Categoria Atual: <span id="categoriaAtual"></span></h3>
-<div id="categoriasContainer"></div>
-<button class="btn btn-success" id="carregarBtn" onclick="carregarCategoria()">Carregar</button>
-<button class="btn btn-danger" id="stopBtn" onclick="pararJogo()" class="hidden">🛑 Revelar Manual</button>
-<p id="statusCarregado"></p>
-<p id="statusJogadores"></p>
-</div>
+    <div id="conferencia" class="hidden">
+      <h3>Conferência - Marca o que está errado</h3>
+      <div id="listaRespostas"></div>
+      <button onclick="finalizarRodada()">✅ Confirmar Pontos</button>
+    </div>
 
-<div id="revealArea" class="hidden">
-<h3>Revelação</h3>
-<div id="revealContent"></div>
-<button class="btn btn-success" onclick="proximaRodada()">Próxima Rodada</button>
-</div>
-
-<div class="score-board">
-<h3>Placar</h3>
-<div id="placar"></div>
-</div>
-</div>
-
-<audio id="startSound" src="https://cdn.freesound.org/previews/270/270404_5123851-lq.mp3"></audio>
-<audio id="stopSound" src="https://cdn.freesound.org/previews/270/270404_5123851-lq.mp3"></audio>
-<audio id="revealSound" src="https://cdn.freesound.org/previews/270/270404_5123851-lq.mp3"></audio>
+    <div class="scoreboard" id="scoreboard"></div>
+    <div class="log" id="log"></div>
+    <button onclick="sairSala()" style="background:#ef4444;margin-top:12px">Sair da Sala</button>
+  </div>
 </div>
 
 <script type="module">
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-import { getDatabase, ref, set, get, onValue, update, remove } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js';
+import { getDatabase, ref, set, onValue, remove, update, get } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyB9YvUhz0bLwYJvQwFqTqR8XkNqE9P8XkN",
-  authDomain: "stop-game-demo.firebaseapp.com",
-  databaseURL: "https://stop-game-demo-default-rtdb.firebaseio.com",
-  projectId: "stop-game-demo",
-  storageBucket: "stop-game-demo.appspot.com",
-  messagingSenderId: "123456789",
-  appId: "1:123456789:web:abcdef123456"
+  apiKey: "AIzaSyD73MdlwNaB15lstlVhDSKuMrfSbVhR_Yc",
+  authDomain: "adedonha-3b390.firebaseapp.com",
+  databaseURL: "https://adedonha-3b390-default-rtdb.firebaseio.com",
+  projectId: "adedonha-3b390",
+  storageBucket: "adedonha-3b390.firebasestorage.app",
+  messagingSenderId: "768433024166",
+  appId: "1:768433024166:web:13116ff308f9466ff61867"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-const CATEGORIAS = ['Nome','Animal','Objeto','Comida','País'];
-let modoJogo = '';
-let souLider = false;
-let salaAtual = '';
-let meuId = 'p_' + Math.random().toString(36).substr(2,9);
+const CATEGORIAS = ['Nome', 'Objeto', 'Cor', 'Legumes', 'Filmes', 'Cidade', 'País'];
+let salaAtual = null;
+let meuId = 'p_' + Math.random().toString(36).slice(2,8);
 let meuNome = '';
-let categoriaAtualIndex = 0;
-let timerInterval;
-let tempoRestante = 60;
+let timerInterval = null;
 
-window.selecionarModo = function(modo) {
-  modoJogo = modo;
-  if(modo==='solo') {
-    document.getElementById('playerInfo').classList.remove('hidden');
-    document.getElementById('multiOptions').classList.add('hidden');
-  } else {
-    document.getElementById('multiOptions').classList.remove('hidden');
-    document.getElementById('playerInfo').classList.add('hidden');
+window.entrarSala = function() {
+  meuNome = document.getElementById('nome').value.trim();
+  salaAtual = document.getElementById('sala').value.trim().toUpperCase();
+  if(!meuNome ||!salaAtual) return alert('Preenche nome e código da sala');
+
+  const playerRef = ref(db, `stop/${salaAtual}/players/${meuId}`);
+  set(playerRef, {nome: meuNome, score: 0});
+
+  document.getElementById('lobby').classList.add('hidden');
+  document.getElementById('game').classList.remove('hidden');
+  log(`Você entrou na sala ${salaAtual}`);
+  escutarSala();
+  window.onbeforeunload = () => remove(playerRef);
+}
+
+function escutarSala() {
+  const salaRef = ref(db, `stop/${salaAtual}`);
+  onValue(salaRef, (snap) => {
+    const data = snap.val();
+    if(!data) return;
+
+    const players = data.players || {};
+    const playerCount = Object.keys(players).length;
+
+    document.getElementById('players').innerHTML = Object.entries(players)
+    .map(([id,p]) => `<div class="player ${id===meuId?'you':''}">${p.nome} - ${p.score||0}pts</div>`)
+    .join('');
+
+    if(playerCount >= 2 &&!data.rodada) {
+      if(Object.keys(players)[0] === meuId) {
+        document.getElementById('preGame').classList.remove('hidden');
+      }
+      document.getElementById('status').textContent = 'Pronto pra começar';
+    }
+
+    if(data.rodada) {
+      atualizarRodada(data.rodada);
+    }
+
+    atualizarScoreboard(players);
+  });
+}
+
+window.iniciarRodada = function() {
+  const letras = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const letra = letras[Math.floor(Math.random() * letras.length)];
+
+  const rodada = {
+    letra: letra,
+    status: 'jogando',
+    inicio: Date.now(),
+    duracao: 600000, // 10 min
+    respostas: {},
+    parouPor: null
+  };
+
+  set(ref(db, `stop/${salaAtual}/rodada`), rodada);
+}
+
+function atualizarRodada(rodada) {
+  const agora = Date.now();
+  const tempoRestante = Math.max(0, rodada.duracao - (agora - rodada.inicio));
+
+  if(rodada.status === 'jogando') {
+    document.getElementById('playArea').classList.remove('hidden');
+    document.getElementById('preGame').classList.add('hidden');
+    document.getElementById('letra').textContent = rodada.letra;
+
+    // Monta inputs se for primeira vez
+    if(!document.getElementById('cats').innerHTML) {
+      document.getElementById('cats').innerHTML = CATEGORIAS.map(cat =>
+        `<div class="cat"><label>${cat}:</label><input id="cat_${cat}" placeholder="${rodada.letra}..."></div>`
+      ).join('');
+    }
+
+    // Timer
+    const min = Math.floor(tempoRestante/60000);
+    const seg = Math.floor((tempoRestante%60000)/1000);
+    document.getElementById('timer').textContent = `${min}:${seg.toString().padStart(2,'0')}`;
+
+    if(tempoRestante <= 0) {
+      finalizarTempo();
+    }
+  }
+
+  if(rodada.status === 'conferencia') {
+    document.getElementById('playArea').classList.add('hidden');
+    document.getElementById('conferencia').classList.remove('hidden');
+    montarConferencia(rodada);
   }
 }
 
-window.criarSala = async function() {
-  const sala = document.getElementById('salaInput').value.trim();
-  if(!sala) return alert('Digite o nome da sala');
-  salaAtual = sala;
-  souLider = true;
-  await set(ref(db, `stop/${sala}`), {
-    lider: meuId,
-    status: 'lobby',
-    players: {},
-    rodada: {}
+window.pararJogo = function() {
+  update(ref(db, `stop/${salaAtual}/rodada`), {
+    status: 'conferencia',
+    parouPor: meuId
   });
-  mostrarPlayerInfo();
+  salvarRespostas();
 }
 
-window.entrarSala = async function() {
-  const sala = document.getElementById('salaInput').value.trim();
-  if(!sala) return alert('Digite o nome da sala');
-  const salaSnap = await get(ref(db, `stop/${sala}`));
-  if(!salaSnap.exists()) return alert('Sala não existe');
-  salaAtual = sala;
-  souLider = false;
-  mostrarPlayerInfo();
+function finalizarTempo() {
+  clearInterval(timerInterval);
+  update(ref(db, `stop/${salaAtual}/rodada`), {
+    status: 'conferencia'
+  });
+  salvarRespostas();
 }
 
-function mostrarPlayerInfo() {
-  document.getElementById('menuArea').classList.add('hidden');
-  document.getElementById('playerInfo').classList.remove('hidden');
+function salvarRespostas() {
+  const respostas = {};
+  CATEGORIAS.forEach(cat => {
+    const val = document.getElementById(`cat_${cat}`)?.value.trim() || '';
+    respostas[cat] = val;
+  });
+  set(ref(db, `stop/${salaAtual}/rodada/respostas/${meuId}`), respostas);
 }
 
-window.iniciarJogo = async function() {
-  meuNome = document.getElementById('nomeInput').value.trim();
-  if(!meuNome) return alert('Digite seu nome');
+function montarConferencia(rodada) {
+  const container = document.getElementById('listaRespostas');
+  let html = '';
 
-  if(modoJogo==='multi') {
-    await set(ref(db, `stop/${salaAtual}/players/${meuId}`), {
-      nome: meuNome,
-      pontos: 0
+  CATEGORIAS.forEach(cat => {
+    html += `<h4>${cat}</h4>`;
+    Object.entries(rodada.respostas || {}).forEach(([pid, resp]) => {
+      const palavra = resp[cat] || '-';
+      html += `<div style="margin:6px 0">
+        <input type="checkbox" id="chk_${pid}_${cat}" checked>
+        <label for="chk_${pid}_${cat}">${getNome(pid)}: ${palavra}</label>
+      </div>`;
     });
+  });
 
-    document.getElementById('playerInfo').classList.add('hidden');
-    document.getElementById('lobbyArea').classList.remove('hidden');
-    document.getElementById('nomeSala').textContent = salaAtual;
-    document.getElementById('codigoSala').textContent = salaAtual;
-    document.getElementById('startBtn').classList.toggle('hidden',!souLider);
+  container.innerHTML = html;
+}
 
-    onValue(ref(db, `stop/${salaAtual}/players`), (snap) => {
-      const players = snap.val() || {};
-      atualizarListaJogadores(players);
-    });
+function getNome(pid) {
+  const el = document.querySelector(`.player`);
+  return document.querySelectorAll('.player')[Array.from(document.querySelectorAll('.player')).findIndex(e=>e.textContent.includes(pid))] || pid;
+}
 
-    onValue(ref(db, `stop/${salaAtual}/rodada`), (snap) => {
-      const rodada = snap.val();
-      onValue(ref(db, `stop/${salaAtual}/players`), (pSnap) => {
-        atualizarRodada(rodada, pSnap.val());
+window.finalizarRodada = function() {
+  const rodadaRef = ref(db, `stop/${salaAtual}/rodada`);
+  get(rodadaRef).then(snap => {
+    const rodada = snap.val();
+    const pontos = calcularPontos(rodada);
+
+    // Atualiza score de cada player
+    Object.entries(pontos).forEach(([pid, pts]) => {
+      const scoreRef = ref(db, `stop/${salaAtual}/players/${pid}/score`);
+      get(scoreRef).then(s => {
+        const atual = s.val() || 0;
+        set(scoreRef, atual + pts);
       });
     });
 
-    // Se a sala for apagada, volta pro menu
-    onValue(ref(db, `stop/${salaAtual}`), (snap) => {
-      if(!snap.exists() && document.getElementById('lobbyArea').classList.contains('hidden')===false) {
-        alert('A sala foi fechada pelo líder');
-        location.reload();
-      }
-    });
-
-  } else {
-    document.getElementById('playerInfo').classList.add('hidden');
-    document.getElementById('gameArea').classList.remove('hidden');
-    iniciarRodadaSolo();
-  }
-}
-
-function atualizarListaJogadores(players) {
-  const container = document.getElementById('listaJogadores');
-  container.innerHTML = '';
-  Object.values(players).forEach(p => {
-    container.innerHTML += `<div class="player-card">${p.nome}<br>${p.pontos} pts</div>`;
+    log('Rodada finalizada! Nova rodada em 5s...');
+    setTimeout(() => {
+      remove(rodadaRef);
+      document.getElementById('conferencia').classList.add('hidden');
+      document.getElementById('playArea').classList.add('hidden');
+      document.getElementById('cats').innerHTML = '';
+    }, 5000);
   });
 }
 
-window.iniciarRodada = async function() {
-  categoriaAtualIndex = 0;
-  await set(ref(db, `stop/${salaAtual}/rodada`), {
-    categoria: CATEGORIAS[0],
-    status: 'jogando',
-    respostas: {},
-    revelado: {},
-    reveladoAnimado: false
-  });
-  document.getElementById('lobbyArea').classList.add('hidden');
-  document.getElementById('gameArea').classList.remove('hidden');
-  montarInputs();
-  iniciarTimer();
-  playSound('startSound');
-}
-
-function iniciarRodadaSolo() {
-  document.getElementById('gameArea').classList.remove('hidden');
-  montarInputs();
-  iniciarTimer();
-  playSound('startSound');
-}
-
-function montarInputs() {
-  const container = document.getElementById('categoriasContainer');
-  container.innerHTML = '';
-  CATEGORIAS.forEach(cat => {
-    container.innerHTML += `
-      <div class="categoria">
-        <label>${cat}</label>
-        <input type="text" id="input_${cat}" placeholder="Digite...">
-      </div>
-    `;
-  });
-}
-
-function iniciarTimer() {
-  tempoRestante = 60;
-  document.getElementById('timer').textContent = tempoRestante + 's';
-  clearInterval(timerInterval);
-  timerInterval = setInterval(() => {
-    tempoRestante--;
-    document.getElementById('timer').textContent = tempoRestante + 's';
-    if(tempoRestante<=0) {
-      clearInterval(timerInterval);
-      if(modoJogo==='multi' && souLider) pararJogo();
-    }
-  }, 1000);
-}
-
-window.carregarCategoria = async function() {
-  const categoria = CATEGORIAS[categoriaAtualIndex];
-  const valor = document.getElementById(`input_${categoria}`).value.trim();
-  if(!valor) return alert('Digite algo!');
-
-  await set(ref(db, `stop/${salaAtual}/rodada/respostas/${meuId}/${categoria}`), valor);
-  await update(ref(db, `stop/${salaAtual}/rodada/revelado/${meuId}`), true);
-
-  document.getElementById('input_' + categoria).disabled = true;
-  document.getElementById('carregarBtn').disabled = true;
-  document.getElementById('carregarBtn').textContent = 'Carregado';
-  document.getElementById('statusCarregado').innerHTML = '✓ Você já carregou!';
-
-  // CHECAGEM AUTOMÁTICA - MUDANÇA 1
-  const [rodadaSnap, playersSnap] = await Promise.all([
-    get(ref(db, `stop/${salaAtual}/rodada`)),
-    get(ref(db, `stop/${salaAtual}/players`))
-  ]);
-
-  const rodada = rodadaSnap.val();
-  const players = playersSnap.val();
-
-  const revelados = Object.keys(rodada?.revelado || {});
-  const totalPlayers = Object.keys(players || {}).length;
-
-  console.log(`Carregados: ${revelados.length}/${totalPlayers}`);
-
-  if(revelados.length >= totalPlayers && totalPlayers > 1) {
-    console.log('Todo mundo carregou! Revelando automático...');
-    await update(ref(db, `stop/${salaAtual}/rodada`), {
-      status: 'revelando',
-      reveladoAnimado: false
-    });
-  }
-}
-
-window.pararJogo = async function() {
-  if(modoJogo==='multi' && souLider) {
-    await update(ref(db, `stop/${salaAtual}/rodada`), {
-      status: 'revelando',
-      reveladoAnimado: false
-    });
-  } else if(modoJogo==='solo') {
-    mostrarRevelacaoSolo();
-  }
-}
-
-function atualizarRodada(rodada, players) {
-  if(!rodada) return;
-
-  const categoriaAtual = CATEGORIAS[categoriaAtualIndex];
-  document.getElementById('categoriaAtual').textContent = categoriaAtual;
-
-  const revelados = Object.keys(rodada.revelado || {});
-  document.getElementById('statusJogadores').innerHTML =
-    `Jogadores prontos: ${revelados.length}/${Object.keys(players).length}`;
-
-  // MUDANÇA 2 - REVELA AUTOMÁTICO
-  if(rodada.status === 'revelando' &&!rodada.reveladoAnimado) {
-    clearInterval(timerInterval);
-    document.getElementById('playArea').classList.add('hidden');
-    document.getElementById('revealArea').classList.remove('hidden');
-    mostrarRevelacao(rodada, players, categoriaAtual);
-    playSound('revealSound');
-    update(ref(db, `stop/${salaAtual}/rodada`), { reveladoAnimado: true });
-  }
-}
-
-function mostrarRevelacao(rodada, players, categoria) {
+function calcularPontos(rodada) {
+  const pontos = {};
   const respostas = rodada.respostas || {};
-  const conteudo = document.getElementById('revealContent');
-  conteudo.innerHTML = '<table class="reveal-table"><tr><th>Jogador</th><th>Resposta</th><th>Pontos</th></tr>';
+  const letra = rodada.letra.toLowerCase();
 
-  Object.entries(players).forEach(([id, player]) => {
-    const resp = respostas[id]?.[categoria] || '-';
-    const pontos = calcularPontos(resp, respostas, categoria);
-    conteudo.innerHTML += `<tr><td>${player.nome}</td><td>${resp}</td><td class="points-${pontos}">${pontos}</td></tr>`;
-    update(ref(db, `stop/${salaAtual}/players/${id}/pontos`), player.pontos + pontos);
+  CATEGORIAS.forEach(cat => {
+    const palavras = {};
+
+    Object.entries(respostas).forEach(([pid, resp]) => {
+      let palavra = (resp[cat] || '').toLowerCase();
+      palavra = removerAcento(palavra).trim();
+
+      if(!palavra ||!palavra.startsWith(letra)) {
+        palavras[pid] = {val: palavra, pts: 0};
+        return;
+      }
+
+      // Conta quantos usaram essa palavra
+      let repeticoes = 0;
+      Object.values(respostas).forEach(r => {
+        if(removerAcento(r[cat]||'').toLowerCase().trim() === palavra) repeticoes++;
+      });
+
+      palavras[pid] = {val: palavra, pts: repeticoes === 1? 10 : 5};
+    });
+
+    // Soma pontos
+    Object.entries(palavras).forEach(([pid, p]) => {
+      pontos[pid] = (pontos[pid] || 0) + p.pts;
+    });
   });
 
-  conteudo.innerHTML += '</table>';
+  return pontos;
 }
 
-function mostrarRevelacaoSolo() {
-  document.getElementById('playArea').classList.add('hidden');
-  document.getElementById('revealArea').classList.remove('hidden');
-  document.getElementById('revealContent').innerHTML = '<p>Modo solo - pontuação manual</p>';
+function removerAcento(str) {
+  return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
 
-function calcularPontos(resp, todasRespostas, categoria) {
-  if(!resp || resp==='-') return 0;
-  const valores = Object.values(todasRespostas).map(r => r[categoria]?.toLowerCase()).filter(Boolean);
-  const count = valores.filter(v => v===resp.toLowerCase()).length;
-  if(count===1) return 10;
-  if(count>1) return 5;
-  return 0;
+function atualizarScoreboard(players) {
+  const sorted = Object.entries(players).sort((a,b) => (b[1].score||0) - (a[1].score||0));
+  document.getElementById('scoreboard').innerHTML = '<h4>Placar</h4>' +
+    sorted.map(([id,p]) => `<div class="score-row"><span>${p.nome}</span><span>${p.score||0} pts</span></div>`).join('');
 }
 
-window.proximaRodada = async function() {
-  categoriaAtualIndex++;
-  if(categoriaAtualIndex >= CATEGORIAS.length) {
-    alert('Jogo finalizado!');
-    return;
-  }
-
-  if(modoJogo==='multi' && souLider) {
-    await set(ref(db, `stop/${salaAtual}/rodada`), {
-      categoria: CATEGORIAS[categoriaAtualIndex],
-      status: 'jogando',
-      respostas: {},
-      revelado: {},
-      reveladoAnimado: false
-    });
-  }
-
-  document.getElementById('revealArea').classList.add('hidden');
-  document.getElementById('playArea').classList.remove('hidden');
-  document.getElementById('carregarBtn').disabled = false;
-  document.getElementById('carregarBtn').textContent = 'Carregar';
-  document.getElementById('statusCarregado').innerHTML = '';
-  montarInputs();
-  iniciarTimer();
+function log(msg) {
+  document.getElementById('log').innerHTML += msg + '<br>';
+  document.getElementById('log').scrollTop = 9999;
 }
 
-window.voltarLobby = async function() {
-  if(!confirm('Tem certeza? Se você é o líder, a sala será fechada pra todos.')) return;
-
-  // MUDANÇA 3 - APAGA SALA SE LÍDER SAIR
-  if(modoJogo==='multi' && salaAtual) {
-    if(souLider) {
-      await remove(ref(db, `stop/${salaAtual}`));
-    } else {
-      await remove(ref(db, `stop/${salaAtual}/players/${meuId}`));
-    }
-  }
+window.sairSala = function() {
+  if(salaAtual) remove(ref(db, `stop/${salaAtual}/players/${meuId}`));
   location.reload();
 }
-
-window.addEventListener('beforeunload', async () => {
-  if(modoJogo==='multi' && souLider && salaAtual) {
-    await remove(ref(db, `stop/${salaAtual}`));
-  }
-});
-
-function playSound(id) {
-  document.getElementById(id).play().catch(()=>{});
-}
-
-function log(msg) { console.log('[STOP]', msg); }
 </script>
 </body>
 </html>
