@@ -1,1273 +1,235 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stop Online – Adedonha</title>
-    <style>
-        :root {
-            --bg: #0b1120;
-            --card: #111827;
-            --card2: #1a2235;
-            --border: #1e2a3d;
-            --text: #e2e8f0;
-            --text2: #94a3b8;
-            --purple: #8b5cf6;
-            --purple2: #7c3aed;
-            --cyan: #22d3ee;
-            --amber: #f59e0b;
-            --green: #10b981;
-            --red: #ef4444;
-            --radius: 16px;
-            --radius-sm: 10px;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            background: var(--bg);
-            background-image: radial-gradient(ellipse at 50% 0%, #1a2540 0%, #0b1120 60%);
-            color: var(--text);
-            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 16px;
-            -webkit-tap-highlight-color: transparent;
-            user-select: none;
-            -webkit-user-select: none;
-        }
-
-        .box {
-            width: 100%;
-            max-width: 640px;
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 24px;
-            padding: 24px 20px;
-            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.03) inset;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-        .box::before {
-            content: '';
-            position: absolute;
-            top: -80px;
-            right: -80px;
-            width: 200px;
-            height: 200px;
-            background: var(--purple);
-            border-radius: 50%;
-            filter: blur(100px);
-            opacity: 0.08;
-            pointer-events: none;
-        }
-        .box::after {
-            content: '';
-            position: absolute;
-            bottom: -60px;
-            left: -60px;
-            width: 160px;
-            height: 160px;
-            background: var(--cyan);
-            border-radius: 50%;
-            filter: blur(90px);
-            opacity: 0.06;
-            pointer-events: none;
-        }
-
-        h1 {
-            font-size: 26px;
-            text-align: center;
-            margin-bottom: 6px;
-            font-weight: 800;
-            letter-spacing: -0.5px;
-            background: linear-gradient(135deg, #c4b5fd, #22d3ee);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            position: relative;
-            z-index: 1;
-        }
-        .subtitle {
-            text-align: center;
-            font-size: 12px;
-            color: var(--text2);
-            margin-bottom: 16px;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            position: relative;
-            z-index: 1;
-        }
-
-        input[type="text"] {
-            width: 100%;
-            padding: 14px 16px;
-            border-radius: var(--radius-sm);
-            border: 1px solid var(--border);
-            background: var(--card2);
-            color: #fff;
-            font-size: 15px;
-            transition: all 0.2s;
-            outline: none;
-            position: relative;
-            z-index: 1;
-        }
-        input[type="text"]:focus {
-            border-color: var(--purple);
-            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
-            background: #1e2640;
-        }
-        input[type="text"]::placeholder {
-            color: #4a5568;
-        }
-        input[type="text"]:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            background: #0f172a;
-            border-color: #1a2538;
-        }
-        input[type="text"].locked {
-            border-color: var(--green) !important;
-            background: #0d2818 !important;
-            box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2) !important;
-        }
-
-        button {
-            width: 100%;
-            padding: 14px;
-            border-radius: var(--radius-sm);
-            border: none;
-            font-size: 15px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.25s;
-            letter-spacing: 0.3px;
-            position: relative;
-            z-index: 1;
-            overflow: hidden;
-        }
-        button:active {
-            transform: scale(0.97);
-        }
-        .btn-primary {
-            background: linear-gradient(135deg, #8b5cf6, #6d28d9);
-            color: #fff;
-            box-shadow: 0 4px 20px rgba(139, 92, 246, 0.35);
-        }
-        .btn-primary:hover {
-            box-shadow: 0 6px 28px rgba(139, 92, 246, 0.5);
-            transform: translateY(-1px);
-        }
-        .btn-stop {
-            background: linear-gradient(135deg, #ef4444, #dc2626);
-            color: #fff;
-            box-shadow: 0 4px 20px rgba(239, 68, 68, 0.35);
-            font-size: 17px;
-            letter-spacing: 1px;
-        }
-        .btn-stop:hover {
-            box-shadow: 0 6px 28px rgba(239, 68, 68, 0.5);
-        }
-        .btn-send {
-            background: linear-gradient(135deg, #10b981, #059669);
-            color: #fff;
-            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.35);
-        }
-        .btn-send:hover {
-            box-shadow: 0 6px 28px rgba(16, 185, 129, 0.5);
-        }
-        .btn-out {
-            background: transparent;
-            border: 1px solid #4a3040;
-            color: #f87171;
-            margin-top: 8px;
-            font-weight: 600;
-        }
-        .btn-out:hover {
-            background: #1f1118;
-            border-color: #ef4444;
-        }
-        .btn-sm {
-            width: auto;
-            padding: 8px 16px;
-            font-size: 13px;
-            border-radius: 20px;
-        }
-        button:disabled {
-            opacity: 0.45;
-            cursor: not-allowed;
-            pointer-events: none;
-            filter: grayscale(20%);
-        }
-
-        .hidden {
-            display: none !important;
-        }
-
-        .section-title {
-            font-size: 13px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            color: var(--text2);
-            margin-bottom: 8px;
-            position: relative;
-            z-index: 1;
-        }
-
-        /* Players */
-        .players {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            margin: 10px 0;
-            position: relative;
-            z-index: 1;
-        }
-        .player-tag {
-            display: flex;
-            align-items: center;
-            gap: 7px;
-            background: var(--card2);
-            border: 1px solid var(--border);
-            padding: 8px 14px;
-            border-radius: 24px;
-            font-size: 13px;
-            font-weight: 600;
-            transition: all 0.2s;
-        }
-        .player-tag.you {
-            border-color: var(--purple);
-            background: #1e1b35;
-            box-shadow: 0 0 12px rgba(139, 92, 246, 0.2);
-        }
-        .player-tag .dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: var(--text2);
-            flex-shrink: 0;
-        }
-        .player-tag .dot.sent {
-            background: var(--green);
-            box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
-        }
-        .player-tag .dot.you-dot {
-            background: var(--purple);
-            box-shadow: 0 0 8px rgba(139, 92, 246, 0.6);
-        }
-        .player-tag .score-badge {
-            font-size: 11px;
-            color: var(--amber);
-            font-weight: 700;
-            margin-left: 2px;
-        }
-
-        /* Timer e Letra */
-        .game-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            margin: 14px 0;
-            flex-wrap: wrap;
-            position: relative;
-            z-index: 1;
-        }
-        .timer-box {
-            background: var(--card2);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            padding: 10px 18px;
-            text-align: center;
-            flex: 1;
-            min-width: 100px;
-        }
-        .timer-number {
-            font-size: 40px;
-            font-weight: 800;
-            color: var(--amber);
-            font-variant-numeric: tabular-nums;
-            font-family: 'SF Mono', 'JetBrains Mono', 'Consolas', monospace;
-            line-height: 1;
-        }
-        .timer-number.urgent {
-            color: #ef4444;
-            animation: pulse 0.6s ease-in-out infinite;
-        }
-        @keyframes pulse {
-            0%,
-            100% {
-                opacity: 1;
-            }
-            50% {
-                opacity: 0.4;
-            }
-        }
-        .letter-box {
-            background: var(--card2);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            padding: 10px 22px;
-            text-align: center;
-            flex: 1;
-            min-width: 100px;
-        }
-        .letter-display {
-            font-size: 52px;
-            font-weight: 900;
-            color: var(--cyan);
-            text-shadow: 0 0 40px rgba(34, 211, 238, 0.5);
-            line-height: 1;
-            letter-spacing: 2px;
-        }
-
-        /* Categorias - inputs */
-        .cats-grid {
-            display: grid;
-            gap: 10px;
-            margin: 10px 0 14px 0;
-            position: relative;
-            z-index: 1;
-        }
-        .cat-row {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .cat-label {
-            width: 85px;
-            font-size: 13px;
-            font-weight: 600;
-            color: #cbd5e1;
-            text-align: right;
-            flex-shrink: 0;
-            letter-spacing: 0.2px;
-        }
-        .cat-row input {
-            flex: 1;
-            margin: 0;
-            font-size: 14px;
-        }
-
-        /* Conferência */
-        .conf-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 12px;
-            margin: 8px 0;
-            position: relative;
-            z-index: 1;
-        }
-        .conf-table th,
-        .conf-table td {
-            padding: 8px 6px;
-            text-align: center;
-            border-bottom: 1px solid var(--border);
-            vertical-align: middle;
-        }
-        .conf-table th {
-            background: var(--card2);
-            font-weight: 700;
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: var(--text2);
-            position: sticky;
-            top: 0;
-        }
-        .conf-table td {
-            font-size: 13px;
-        }
-        .conf-table .cat-name {
-            text-align: left;
-            font-weight: 700;
-            color: var(--cyan);
-            font-size: 12px;
-            white-space: nowrap;
-        }
-        .conf-table .resp-cell {
-            font-weight: 500;
-            min-width: 60px;
-        }
-        .conf-table .resp-cell.empty {
-            color: #4a5568;
-            font-style: italic;
-        }
-        .conf-table input[type="checkbox"] {
-            width: 16px;
-            height: 16px;
-            accent-color: var(--red);
-            cursor: pointer;
-            transform: scale(1.1);
-        }
-        .conf-table .valid-tag {
-            font-size: 10px;
-            color: var(--green);
-            font-weight: 700;
-        }
-        .conf-table .invalid-tag {
-            font-size: 10px;
-            color: var(--red);
-            font-weight: 700;
-        }
-
-        /* Scoreboard */
-        .scoreboard {
-            background: var(--card2);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            padding: 14px;
-            margin-top: 12px;
-            position: relative;
-            z-index: 1;
-        }
-        .score-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 7px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            font-size: 14px;
-        }
-        .score-row .pos {
-            font-weight: 800;
-            color: var(--amber);
-            width: 28px;
-            font-size: 16px;
-        }
-        .score-row .name {
-            flex: 1;
-            font-weight: 600;
-        }
-        .score-row .pts {
-            font-weight: 800;
-            color: var(--cyan);
-            font-size: 16px;
-        }
-
-        /* Log */
-        .log {
-            background: rgba(0, 0, 0, 0.35);
-            border: 1px solid var(--border);
-            padding: 10px 14px;
-            border-radius: var(--radius-sm);
-            max-height: 150px;
-            overflow-y: auto;
-            font-size: 11px;
-            color: #94a3b8;
-            margin-top: 10px;
-            line-height: 1.6;
-            position: relative;
-            z-index: 1;
-        }
-        .log::-webkit-scrollbar {
-            width: 4px;
-        }
-        .log::-webkit-scrollbar-thumb {
-            background: #2d3a50;
-            border-radius: 4px;
-        }
-
-        /* Config de categorias */
-        .cat-config {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin: 10px 0;
-            position: relative;
-            z-index: 1;
-        }
-        .cat-chip {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            background: var(--card2);
-            border: 1px solid var(--border);
-            padding: 8px 13px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            user-select: none;
-        }
-        .cat-chip.selected {
-            background: #1e1b35;
-            border-color: var(--purple);
-            color: #c4b5fd;
-            box-shadow: 0 0 10px rgba(139, 92, 246, 0.2);
-        }
-        .cat-chip input {
-            display: none;
-        }
-        .cat-chip .chip-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: var(--border);
-            transition: all 0.2s;
-        }
-        .cat-chip.selected .chip-dot {
-            background: var(--purple);
-            box-shadow: 0 0 6px rgba(139, 92, 246, 0.6);
-        }
-
-        .btn-row {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            position: relative;
-            z-index: 1;
-        }
-        .btn-row button {
-            flex: 1;
-            min-width: 120px;
-        }
-
-        .status-badge {
-            display: inline-block;
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-            position: relative;
-            z-index: 1;
-        }
-        .status-waiting {
-            background: #1a2530;
-            color: #94a3b8;
-        }
-        .status-ready {
-            background: #1a2e20;
-            color: #10b981;
-        }
-        .status-playing {
-            background: #1e1b35;
-            color: #c4b5fd;
-        }
-        .status-confer {
-            background: #2e1a1a;
-            color: #fbbf24;
-        }
-
-        @media (max-width: 480px) {
-            .box {
-                padding: 16px 12px;
-                border-radius: 18px;
-            }
-            h1 {
-                font-size: 21px;
-            }
-            .timer-number {
-                font-size: 30px;
-            }
-            .letter-display {
-                font-size: 38px;
-            }
-            .cat-label {
-                width: 60px;
-                font-size: 11px;
-            }
-            .cat-row input {
-                font-size: 13px;
-                padding: 10px 12px;
-            }
-            .conf-table {
-                font-size: 10px;
-            }
-            .conf-table th,
-            .conf-table td {
-                padding: 5px 3px;
-            }
-            .btn-row button {
-                font-size: 13px;
-                padding: 12px;
-            }
-            .player-tag {
-                font-size: 11px;
-                padding: 6px 10px;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Extrator Bicho PE v3 - 1 ao 5</title>
+<style>
+    * { margin:0; padding:0; box-sizing:border-box; font-family:Inter,Arial,sans-serif; }
+  body { background:#0f172a; color:#f8fafc; padding:20px; display:flex; justify-content:center; }
+.container { width:100%; max-width:650px; background:rgba(255,255,255,0.08); backdrop-filter:blur(14px);
+    border:1px solid rgba(255,255,255,0.12); border-radius:24px; padding:24px; }
+  h1 { font-size:24px; margin-bottom:8px; text-align:center; }
+  p { color:#cbd5e1; font-size:14px; text-align:center; margin-bottom:20px; }
+  label { font-size:13px; color:#cbd5e1; display:block; margin:12px 0 6px; }
+  input[type="date"] { width:100%; padding:12px; border-radius:12px; border:1px solid rgba(255,255,255,0.12);
+    background:rgba(255,255,255,0.08); color:white; }
+.row { display:flex; gap:12px; }
+.row > div { flex:1; }
+  button { width:100%; padding:14px; border:none; border-radius:14px; font-weight:700; font-size:15px;
+    cursor:pointer; margin-top:12px; transition:all 0.2s; }
+  button:hover { transform:translateY(-2px); opacity:0.95; }
+  button:disabled { opacity:0.6; cursor:not-allowed; }
+.btn-primary { background:linear-gradient(135deg,#8b5cf6,#7c3aed); color:white; }
+.btn-success { background:linear-gradient(135deg,#22c55e,#16a34a); color:white; }
+.btn-stop { background:linear-gradient(135deg,#ef4444,#dc2626); color:white; }
+.log { background:rgba(0,0,0,0.3); border-radius:12px; padding:12px; margin-top:16px; font-size:13px;
+    max-height:300px; overflow:auto; white-space:pre-wrap; font-family:monospace; }
+.stats { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:16px; }
+.stat-box { background:rgba(255,255,255,0.06); padding:12px; border-radius:12px; text-align:center; }
+.stat-box b { font-size:20px; display:block; }
+.hidden { display:none; }
+  @media(max-width:600px){.row { flex-direction:column; }.stats { grid-template-columns:1fr; } }
+</style>
 </head>
 <body>
-    <div class="box">
-        <h1>🔤 Stop Online</h1>
-        <p class="subtitle">Adedonha Multiplayer</p>
+<div class="container">
+  <h1>🎲 Extrator Bicho PE v3</h1>
+  <p>Só 1º ao 5º prêmio, sem duplicatas</p>
 
-        <!-- LOBBY -->
-        <div id="lobby">
-            <input type="text" id="nome" placeholder="Seu nome" maxlength="14" autocomplete="off">
-            <input type="text" id="sala" placeholder="Código da sala" maxlength="8" autocomplete="off" style="margin-top:8px">
-            <button class="btn-primary" onclick="entrarSala()" style="margin-top:10px">🎮 Entrar / Criar Sala</button>
-        </div>
-
-        <!-- GAME -->
-        <div id="game" class="hidden">
-            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;position:relative;z-index:1">
-                <span style="font-size:12px;color:var(--text2);font-weight:600">Sala: <span id="salaCodigo" style="color:#fff"></span></span>
-                <button class="btn-sm btn-out" onclick="copiarCodigo()" style="margin:0;width:auto">📋 Copiar código</button>
-            </div>
-            <div class="players" id="players"></div>
-            <div id="statusArea" style="text-align:center;margin:6px 0;position:relative;z-index:1"></div>
-
-            <!-- Configuração de categorias (pré-jogo) -->
-            <div id="configCats" class="hidden">
-                <div class="section-title">📝 Escolha as categorias (4 a 10)</div>
-                <div class="cat-config" id="catConfigCheckboxes"></div>
-                <button class="btn-primary btn-sm" onclick="salvarCategorias()" id="btnSalvarCats" style="margin-top:8px;width:auto">💾 Salvar Categorias</button>
-                <p style="font-size:11px;color:var(--text2);margin-top:4px" id="catInfo"></p>
-            </div>
-
-            <!-- Pré-jogo: botão começar -->
-            <div id="preGame" class="hidden" style="text-align:center;margin-top:8px;position:relative;z-index:1">
-                <button class="btn-primary" onclick="iniciarRodada()">🚀 Começar Rodada</button>
-                <p style="font-size:11px;color:var(--text2);margin-top:4px">Mínimo 2 jogadores</p>
-            </div>
-
-            <!-- Área de jogo -->
-            <div id="playArea" class="hidden">
-                <div class="game-header">
-                    <div class="timer-box">
-                        <div class="timer-number" id="timer">5:00</div>
-                        <div style="font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:1px">Tempo</div>
-                    </div>
-                    <div class="letter-box">
-                        <div class="letter-display" id="letra">A</div>
-                        <div style="font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:1px">Letra</div>
-                    </div>
-                </div>
-                <div class="cats-grid" id="cats"></div>
-                <div class="btn-row">
-                    <button class="btn-send" onclick="enviarRespostas()" id="btnEnviar">📩 Enviar Respostas</button>
-                    <button class="btn-stop" onclick="pararJogo()">🛑 STOP!</button>
-                </div>
-                <p style="font-size:10px;color:var(--text2);text-align:center;margin-top:6px">Envie quando terminar • STOP força conferência</p>
-            </div>
-
-            <!-- Conferência -->
-            <div id="conferencia" class="hidden">
-                <div class="section-title" style="color:#fbbf24">🔍 Conferência – Marque respostas inválidas</div>
-                <div style="max-height:50vh;overflow-y:auto;border-radius:var(--radius-sm);border:1px solid var(--border);position:relative;z-index:1">
-                    <div id="listaRespostas"></div>
-                </div>
-                <button class="btn-primary" onclick="finalizarRodada()" style="margin-top:10px">✅ Finalizar Rodada & Calcular Pontos</button>
-                <p style="font-size:10px;color:var(--text2);text-align:center;margin-top:4px">Respostas marcadas como inválidas não pontuarão</p>
-            </div>
-
-            <!-- Placar -->
-            <div class="scoreboard" id="scoreboard"></div>
-
-            <!-- Log -->
-            <div class="log" id="log"></div>
-
-            <button class="btn-out" onclick="sairSala()" style="margin-top:8px">🚪 Sair da Sala</button>
-        </div>
+  <div class="row">
+    <div>
+      <label>Data Início</label>
+      <input type="date" id="dataInicio">
     </div>
+    <div>
+      <label>Data Fim</label>
+      <input type="date" id="dataFim">
+    </div>
+  </div>
 
-    <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js';
-        import { getDatabase, ref, set, onValue, remove, update, get } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js';
+  <button class="btn-primary" id="btnStart" onclick="iniciar()">🚀 Iniciar Extração</button>
+  <button class="btn-stop hidden" id="btnStop" onclick="parar()">⏹️ Parar</button>
+  <button class="btn-success hidden" id="btnDownload" onclick="baixarTXT()">📥 Baixar TXT</button>
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyD73MdlwNaB15lstlVhDSKuMrfSbVhR_Yc",
-            authDomain: "adedonha-3b390.firebaseapp.com",
-            databaseURL: "https://adedonha-3b390-default-rtdb.firebaseio.com",
-            projectId: "adedonha-3b390",
-            storageBucket: "adedonha-3b390.firebasestorage.app",
-            messagingSenderId: "768433024166",
-            appId: "1:768433024166:web:13116ff308f9466ff61867"
-        };
+  <div class="stats hidden" id="stats">
+    <div class="stat-box">
+      <span>Total</span>
+      <b id="totalNum">0</b>
+    </div>
+    <div class="stat-box">
+      <span>Dias OK</span>
+      <b id="diasOk">0</b>
+    </div>
+  </div>
 
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
+  <div class="log" id="log">Aguardando início...</div>
+</div>
 
-        const CATEGORIAS_DISPONIVEIS = [
-            'Nome', 'Lugar', 'Objeto', 'Cor', 'Verdura', 'Legumes',
-            'Animal', 'Fruta', 'Carro', 'Profissão', 'Filme', 'Cidade', 'País', 'Time', 'Cantor/Banda'
-        ];
-        const CATEGORIAS_PADRAO = ['Nome', 'Lugar', 'Objeto', 'Cor', 'Verdura', 'Legumes'];
+<script>
+const PROXIES = [
+  'https://api.allorigins.win/raw?url=',
+  'https://corsproxy.io/?',
+  'https://api.codetabs.com/v1/proxy?quest='
+];
 
-        let salaAtual = null;
-        let meuId = 'p_' + Math.random().toString(36).slice(2, 8);
-        let meuNome = '';
-        let timerInterval = null;
-        let categoriasAtivas = [...CATEGORIAS_PADRAO];
-        let jaEnviei = false;
-        let souAdmin = false;
-        let playersCache = {};
+let rodando = false;
+let resultados = [];
+let setResultados = new Set();
+let diasOk = 0;
 
-        // ============ LOBBY ============
-        window.entrarSala = function() {
-            meuNome = document.getElementById('nome').value.trim();
-            salaAtual = document.getElementById('sala').value.trim().toUpperCase();
-            if (!meuNome || !salaAtual) return alert('Preencha nome e código da sala');
-            if (salaAtual.length < 2) return alert('Código da sala muito curto');
+document.getElementById('dataInicio').valueAsDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+document.getElementById('dataFim').valueAsDate = new Date();
 
-            const playerRef = ref(db, `stop/${salaAtual}/players/${meuId}`);
-            set(playerRef, { nome: meuNome, score: 0, entrouEm: Date.now() });
+function log(msg) {
+  document.getElementById('log').textContent += msg + '\n';
+  document.getElementById('log').scrollTop = document.getElementById('log').scrollHeight;
+}
 
-            document.getElementById('lobby').classList.add('hidden');
-            document.getElementById('game').classList.remove('hidden');
-            document.getElementById('salaCodigo').textContent = salaAtual;
-            log('🎉 Você entrou na sala!');
-            escutarSala();
-            window.addEventListener('beforeunload', () => remove(playerRef));
-        };
+function updateStats() {
+  document.getElementById('totalNum').textContent = resultados.length;
+  document.getElementById('diasOk').textContent = diasOk;
+  document.getElementById('stats').classList.remove('hidden');
+}
 
-        // ============ ESCUTAR SALA ============
-        function escutarSala() {
-            const salaRef = ref(db, `stop/${salaAtual}`);
-            onValue(salaRef, (snap) => {
-                const data = snap.val();
-                if (!data) {
-                    // Sala foi deletada
-                    log('⚠️ Sala encerrada.');
-                    location.reload();
-                    return;
-                }
+function gerarDatas(inicio, fim) {
+  const arr = [];
+  let dt = new Date(inicio);
+  const dtFim = new Date(fim);
+  while (dt <= dtFim) {
+    arr.push(dt.toISOString().slice(0,10));
+    dt.setDate(dt.getDate() + 1);
+  }
+  return arr;
+}
 
-                const players = data.players || {};
-                playersCache = players;
-                const playerIds = Object.keys(players);
-                const playerCount = playerIds.length;
-                souAdmin = (playerIds[0] === meuId);
+async function fetchComFallback(url) {
+  for (let proxy of PROXIES) {
+    try {
+      const res = await fetch(proxy + encodeURIComponent(url), {timeout: 15000});
+      if (res.ok) return await res.text();
+    } catch(e) {}
+  }
+  throw new Error('Todos os proxies falharam');
+}
 
-                // Render players
-                const enviados = data.rodada?.respostasEnviadas || {};
-                document.getElementById('players').innerHTML = playerIds.map(id => {
-                    const p = players[id];
-                    const isMe = id === meuId;
-                    const enviou = enviados[id] === true;
-                    let dotClass = '';
-                    if (isMe) dotClass = 'you-dot';
-                    else if (enviou) dotClass = 'sent';
-                    return `<div class="player-tag ${isMe?'you':''}">
-                <span class="dot ${dotClass}"></span>
-                ${p.nome} <span class="score-badge">${p.score||0}pts</span>
-                ${enviou ? '✅' : ''}
-              </div>`;
-                }).join('');
+function extrairMilhar1a5(html) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+  const milhares = [];
 
-                // Categorias configuradas
-                if (data.config?.categorias) {
-                    categoriasAtivas = data.config.categorias;
-                } else {
-                    categoriasAtivas = [...CATEGORIAS_PADRAO];
-                }
+  // Pega todas as tabelas de resultado
+  const tabelas = doc.querySelectorAll('table');
 
-                // Status da rodada
-                const rodada = data.rodada;
-                if (rodada) {
-                    if (rodada.status === 'jogando') {
-                        entrarModoJogo(rodada);
-                    } else if (rodada.status === 'conferencia') {
-                        entrarModoConferencia(rodada);
-                    }
-                    // Verificar se todos enviaram (transição automática)
-                    if (rodada.status === 'jogando' && rodada.respostasEnviadas) {
-                        const todosEnviaram = playerIds.every(pid => rodada.respostasEnviadas[pid] === true);
-                        if (todosEnviaram && playerCount >= 2) {
-                            // Transição automática para conferência
-                            update(ref(db, `stop/${salaAtual}/rodada`), { status: 'conferencia', parouPor: 'todos' });
-                            log('✅ Todos enviaram! Iniciando conferência automática...');
-                        }
-                    }
-                } else {
-                    // Sem rodada ativa
-                    sairModoJogo();
-                    sairModoConferencia();
-                    if (playerCount >= 2) {
-                        document.getElementById('preGame').classList.remove('hidden');
-                        document.getElementById('statusArea').innerHTML =
-                            '<span class="status-badge status-ready">Pronto para jogar</span>';
-                    } else {
-                        document.getElementById('preGame').classList.add('hidden');
-                        document.getElementById('statusArea').innerHTML =
-                            '<span class="status-badge status-waiting">Aguardando mais jogadores (mín. 2)</span>';
-                    }
-                    // Mostrar config de categorias se admin e sem config ainda
-                    if (souAdmin && !data.config?.categorias) {
-                        document.getElementById('configCats').classList.remove('hidden');
-                        renderCatConfig();
-                    } else if (data.config?.categorias) {
-                        document.getElementById('configCats').classList.remove('hidden');
-                        renderCatConfigReadonly();
-                        document.getElementById('btnSalvarCats').classList.add('hidden');
-                        document.getElementById('catInfo').textContent =
-                            `${categoriasAtivas.length} categorias configuradas`;
-                    } else {
-                        document.getElementById('configCats').classList.add('hidden');
-                    }
-                }
+  tabelas.forEach(tabela => {
+    const linhas = tabela.querySelectorAll('tr');
+    let count = 0;
 
-                atualizarScoreboard(players);
-            });
+    linhas.forEach(linha => {
+      if (count >= 5) return; // Para no 5º prêmio
+
+      const celulas = linha.querySelectorAll('td');
+      if (celulas.length >= 2) {
+        const texto = celulas[1].textContent.trim();
+        const match = texto.match(/\b\d{4}\b/);
+        if (match) {
+          const num = match[0];
+          const n = parseInt(num);
+          // Filtra anos e números inválidos
+          if (n >= 0 && n <= 9999 && n > 2020 && num.length === 4) {
+            milhares.push(num);
+            count++;
+          }
         }
+      }
+    });
+  });
 
-        // ============ CONFIG CATEGORIAS ============
-        function renderCatConfig() {
-            const container = document.getElementById('catConfigCheckboxes');
-            container.innerHTML = CATEGORIAS_DISPONIVEIS.map(cat => {
-                const sel = categoriasAtivas.includes(cat);
-                return `<label class="cat-chip ${sel?'selected':''}" data-cat="${cat}">
-              <span class="chip-dot"></span> ${cat}
-              <input type="checkbox" ${sel?'checked':''} onchange="toggleCatChip(this, '${cat}')">
-            </label>`;
-            }).join('');
-            document.getElementById('btnSalvarCats').classList.remove('hidden');
-            document.getElementById('catInfo').textContent =
-                `${categoriasAtivas.length} categorias selecionadas`;
-        }
+  return milhares;
+}
 
-        function renderCatConfigReadonly() {
-            const container = document.getElementById('catConfigCheckboxes');
-            container.innerHTML = categoriasAtivas.map(cat =>
-                `<span class="cat-chip selected" style="cursor:default;opacity:0.8">
-              <span class="chip-dot"></span> ${cat}
-            </span>`
-            ).join('');
-            document.getElementById('btnSalvarCats').classList.add('hidden');
-            document.getElementById('catInfo').textContent =
-                `${categoriasAtivas.length} categorias configuradas`;
-        }
+async function iniciar() {
+  const inicio = document.getElementById('dataInicio').value;
+  const fim = document.getElementById('dataFim').value;
 
-        window.toggleCatChip = function(checkbox, cat) {
-            if (!souAdmin) return;
-            if (checkbox.checked) {
-                if (!categoriasAtivas.includes(cat)) categoriasAtivas.push(cat);
-            } else {
-                categoriasAtivas = categoriasAtivas.filter(c => c !== cat);
-            }
-            // Atualiza visual
-            const label = checkbox.closest('.cat-chip');
-            if (checkbox.checked) label.classList.add('selected');
-            else label.classList.remove('selected');
-            document.getElementById('catInfo').textContent =
-                `${categoriasAtivas.length} categorias selecionadas`;
-        };
+  if (!inicio ||!fim) return alert('Preenche as duas datas');
+  if (new Date(inicio) > new Date(fim)) return alert('Data início maior que fim');
 
-        window.salvarCategorias = function() {
-            if (!souAdmin) return;
-            if (categoriasAtivas.length < 4) return alert('Escolha pelo menos 4 categorias');
-            if (categoriasAtivas.length > 10) return alert('Escolha no máximo 10 categorias');
-            set(ref(db, `stop/${salaAtual}/config/categorias`), categoriasAtivas);
-            log('📝 Categorias salvas: ' + categoriasAtivas.join(', '));
-            document.getElementById('btnSalvarCats').classList.add('hidden');
-            renderCatConfigReadonly();
-        };
+  const datas = gerarDatas(inicio, fim);
+  if (datas.length > 90 &&!confirm(`Vai puxar ${datas.length} dias. Continuar?`)) return;
 
-        // ============ INICIAR RODADA ============
-        window.iniciarRodada = function() {
-            const playerCount = Object.keys(playersCache).length;
-            if (playerCount < 2) return alert('Precisa de pelo menos 2 jogadores');
-            if (categoriasAtivas.length < 4) return alert('Configure pelo menos 4 categorias primeiro');
+  rodando = true;
+  resultados = [];
+  setResultados.clear();
+  diasOk = 0;
+  document.getElementById('log').textContent = '';
+  document.getElementById('btnStart').classList.add('hidden');
+  document.getElementById('btnStop').classList.remove('hidden');
+  document.getElementById('btnDownload').classList.add('hidden');
 
-            const letras = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-            const letra = letras[Math.floor(Math.random() * letras.length)];
+  log(`Iniciando ${datas.length} dias - PE - Só 1º ao 5º prêmio`);
+  log('================================\n');
 
-            const rodada = {
-                letra: letra,
-                status: 'jogando',
-                inicio: Date.now(),
-                duracao: 300000, // 5 minutos
-                respostas: {},
-                respostasEnviadas: {},
-                invalidacoes: {},
-                parouPor: null
-            };
+  for (let i = 0; i < datas.length && rodando; i++) {
+    const data = datas[i];
+    log(`[${i+1}/${datas.length}] ${data}... `);
 
-            set(ref(db, `stop/${salaAtual}/rodada`), rodada);
-            jaEnviei = false;
-            log(`🎯 Nova rodada! Letra: ${letra}`);
-        };
+    try {
+      const url = `https://www.resultadofacil.com.br/resultado-do-jogo-do-bicho/pe/do-dia/${data}`;
+      const html = await fetchComFallback(url);
 
-        // ============ MODO JOGO ============
-        function entrarModoJogo(rodada) {
-            document.getElementById('playArea').classList.remove('hidden');
-            document.getElementById('preGame').classList.add('hidden');
-            document.getElementById('conferencia').classList.add('hidden');
-            document.getElementById('configCats').classList.add('hidden');
-            document.getElementById('letra').textContent = rodada.letra;
-            document.getElementById('statusArea').innerHTML =
-                '<span class="status-badge status-playing">🎯 Rodada em andamento</span>';
+      const milhares = extrairMilhar1a5(html);
+      const novos = milhares.filter(m =>!setResultados.has(m));
 
-            // Render inputs de categorias se ainda não foi renderizado ou mudou
-            const catsDiv = document.getElementById('cats');
-            if (!catsDiv.dataset.rendered || catsDiv.dataset.cats !== categoriasAtivas.join(',')) {
-                catsDiv.innerHTML = categoriasAtivas.map(cat =>
-                    `<div class="cat-row">
-                <span class="cat-label">${cat}:</span>
-                <input type="text" id="cat_${cat}" placeholder="${rodada.letra}..." maxlength="25" autocomplete="off">
-              </div>`
-                ).join('');
-                catsDiv.dataset.rendered = 'true';
-                catsDiv.dataset.cats = categoriasAtivas.join(',');
-                // Focar primeiro input
-                setTimeout(() => {
-                    const firstInput = catsDiv.querySelector('input');
-                    if (firstInput && !jaEnviei) firstInput.focus();
-                }, 200);
-            }
+      novos.forEach(m => {
+        resultados.push(m);
+        setResultados.add(m);
+      });
 
-            // Se já enviei, bloquear inputs
-            if (jaEnviei) {
-                bloquearInputs(true);
-                document.getElementById('btnEnviar').disabled = true;
-                document.getElementById('btnEnviar').textContent = '✅ Enviado';
-            } else {
-                bloquearInputs(false);
-                document.getElementById('btnEnviar').disabled = false;
-                document.getElementById('btnEnviar').textContent = '📩 Enviar Respostas';
-                // Restaurar valores se já havia enviado antes (em caso de reconexão)
-                if (rodada.respostas && rodada.respostas[meuId]) {
-                    categoriasAtivas.forEach(cat => {
-                        const inp = document.getElementById(`cat_${cat}`);
-                        if (inp && rodada.respostas[meuId][cat]) {
-                            inp.value = rodada.respostas[meuId][cat];
-                        }
-                    });
-                }
-            }
+      if (novos.length > 0) diasOk++;
+      log(`+${novos.length} resultados`);
+      updateStats();
 
-            // Timer
-            clearInterval(timerInterval);
-            atualizarTimerDisplay(rodada);
-            timerInterval = setInterval(() => atualizarTimerDisplay(rodada), 500);
-        }
+    } catch (err) {
+      log(`ERRO: ${err.message}`);
+    }
 
-        function atualizarTimerDisplay(rodada) {
-            const agora = Date.now();
-            const tempoRestante = Math.max(0, rodada.duracao - (agora - rodada.inicio));
-            const min = Math.floor(tempoRestante / 60000);
-            const seg = Math.floor((tempoRestante % 60000) / 1000);
-            const timerEl = document.getElementById('timer');
-            timerEl.textContent = `${min}:${seg.toString().padStart(2, '0')}`;
+    await new Promise(r => setTimeout(r, 2000));
+  }
 
-            if (tempoRestante <= 30000) {
-                timerEl.classList.add('urgent');
-            } else {
-                timerEl.classList.remove('urgent');
-            }
+  rodando = false;
+  document.getElementById('btnStop').classList.add('hidden');
+  document.getElementById('btnStart').classList.remove('hidden');
 
-            if (tempoRestante <= 0 && rodada.status === 'jogando') {
-                clearInterval(timerInterval);
-                finalizarTempo();
-            }
-        }
+  if (resultados.length > 0) {
+    document.getElementById('btnDownload').classList.remove('hidden');
+    log(`\n✅ Finalizado!`);
+    log(`Total: ${resultados.length} milhares`);
+    log(`Dias com resultado: ${diasOk}/${datas.length}`);
+  } else {
+    log('\n❌ Nenhum resultado encontrado');
+  }
+}
 
-        function finalizarTempo() {
-            clearInterval(timerInterval);
-            if (!jaEnviei) salvarRespostasLocal();
-            update(ref(db, `stop/${salaAtual}/rodada`), { status: 'conferencia', parouPor: 'tempo' });
-            log('⏰ Tempo esgotado! Iniciando conferência...');
-        }
+function parar() {
+  rodando = false;
+  log('\n⏹️ Parado pelo usuário');
+}
 
-        function bloquearInputs(bloquear) {
-            categoriasAtivas.forEach(cat => {
-                const inp = document.getElementById(`cat_${cat}`);
-                if (inp) {
-                    if (bloquear) {
-                        inp.disabled = true;
-                        inp.classList.add('locked');
-                    } else {
-                        inp.disabled = false;
-                        inp.classList.remove('locked');
-                    }
-                }
-            });
-        }
+function baixarTXT() {
+  const conteudo = resultados.join('\n');
+  const blob = new Blob([conteudo], {type:'text/plain'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
 
-        window.enviarRespostas = function() {
-            if (jaEnviei) return;
-            salvarRespostasLocal();
-            // Marcar que enviei
-            update(ref(db, `stop/${salaAtual}/rodada/respostasEnviadas/${meuId}`), true);
-            jaEnviei = true;
-            bloquearInputs(true);
-            document.getElementById('btnEnviar').disabled = true;
-            document.getElementById('btnEnviar').textContent = '✅ Enviado';
-            log('📩 Respostas enviadas! Aguardando os outros jogadores...');
-        };
+  const inicio = document.getElementById('dataInicio').value;
+  const fim = document.getElementById('dataFim').value;
+  a.download = `bicho_pe_1a5_${inicio}_ate_${fim}_${resultados.length}.txt`;
 
-        function salvarRespostasLocal() {
-            const respostas = {};
-            categoriasAtivas.forEach(cat => {
-                const val = document.getElementById(`cat_${cat}`)?.value.trim() || '';
-                respostas[cat] = val;
-            });
-            set(ref(db, `stop/${salaAtual}/rodada/respostas/${meuId}`), respostas);
-        }
-
-        window.pararJogo = function() {
-            if (!jaEnviei) salvarRespostasLocal();
-            update(ref(db, `stop/${salaAtual}/rodada`), {
-                status: 'conferencia',
-                parouPor: meuId
-            });
-            log('🛑 STOP! Alguém parou a rodada.');
-        };
-
-        function sairModoJogo() {
-            clearInterval(timerInterval);
-            document.getElementById('playArea').classList.add('hidden');
-            document.getElementById('cats').dataset.rendered = '';
-            document.getElementById('cats').innerHTML = '';
-            document.getElementById('timer').textContent = '5:00';
-            document.getElementById('timer').classList.remove('urgent');
-            jaEnviei = false;
-            bloquearInputs(false);
-            document.getElementById('btnEnviar').disabled = false;
-            document.getElementById('btnEnviar').textContent = '📩 Enviar Respostas';
-        }
-
-        // ============ MODO CONFERÊNCIA ============
-        function entrarModoConferencia(rodada) {
-            document.getElementById('playArea').classList.add('hidden');
-            document.getElementById('conferencia').classList.remove('hidden');
-            document.getElementById('preGame').classList.add('hidden');
-            document.getElementById('configCats').classList.add('hidden');
-            document.getElementById('statusArea').innerHTML =
-                '<span class="status-badge status-confer">🔍 Conferência</span>';
-            clearInterval(timerInterval);
-            montarConferencia(rodada);
-        }
-
-        function sairModoConferencia() {
-            document.getElementById('conferencia').classList.add('hidden');
-            document.getElementById('listaRespostas').innerHTML = '';
-        }
-
-        function montarConferencia(rodada) {
-            const container = document.getElementById('listaRespostas');
-            const respostas = rodada.respostas || {};
-            const invalidacoes = rodada.invalidacoes || {};
-            const playerIds = Object.keys(playersCache);
-
-            if (playerIds.length === 0) {
-                container.innerHTML = '<p style="padding:12px;color:var(--text2)">Nenhum jogador na sala.</p>';
-                return;
-            }
-
-            // Tabela: linhas = categorias, colunas = jogadores
-            let html = '<table class="conf-table"><thead><tr><th>Categoria</th>';
-            playerIds.forEach(pid => {
-                html += `<th>${escapeHtml(playersCache[pid]?.nome || pid)}</th>`;
-            });
-            html += '<th>Inválida?</th></tr></thead><tbody>';
-
-            categoriasAtivas.forEach(cat => {
-                html += '<tr>';
-                html += `<td class="cat-name">${escapeHtml(cat)}</td>`;
-                playerIds.forEach(pid => {
-                    const resp = respostas[pid]?.[cat] || '';
-                    const cls = resp ? 'resp-cell' : 'resp-cell empty';
-                    html +=
-                        `<td class="${cls}">${resp ? escapeHtml(resp) : '<span style="color:#4a5568">-</span>'}</td>`;
-                });
-                // Coluna de invalidação (toggle por categoria)
-                const invCount = invalidacoes[cat] || {};
-                const totalInv = Object.values(invCount).reduce((a, b) => a + b, 0);
-                html +=
-                    `<td><button class="btn-sm" style="font-size:10px;padding:5px 10px;background:${totalInv>0?'#ef4444':'#334155'};color:#fff;width:auto;margin:0" 
-              onclick="toggleInvalidacao('${cat}')" id="btnInv_${cat}">
-              ${totalInv>0 ? '✗ Inválida ('+totalInv+')' : '✓ Válida'}
-            </button></td>`;
-                html += '</tr>';
-            });
-
-            html += '</tbody></table>';
-            container.innerHTML = html;
-        }
-
-        window.toggleInvalidacao = function(cat) {
-            const rodadaRef = ref(db, `stop/${salaAtual}/rodada/invalidacoes/${cat}`);
-            get(rodadaRef).then(snap => {
-                const current = snap.val() || {};
-                if (current[meuId]) {
-                    // Remover meu voto
-                    const newVal = { ...current };
-                    delete newVal[meuId];
-                    set(rodadaRef, newVal);
-                } else {
-                    // Adicionar meu voto
-                    set(rodadaRef, { ...current, [meuId]: 1 });
-                }
-            });
-        };
-
-        // ============ FINALIZAR RODADA ============
-        window.finalizarRodada = function() {
-            const rodadaRef = ref(db, `stop/${salaAtual}/rodada`);
-            get(rodadaRef).then(snap => {
-                const rodada = snap.val();
-                if (!rodada) return;
-                const pontos = calcularPontos(rodada);
-
-                // Atualiza score de cada jogador
-                const updates = {};
-                Object.entries(pontos).forEach(([pid, pts]) => {
-                    const scoreAtual = playersCache[pid]?.score || 0;
-                    updates[`stop/${salaAtual}/players/${pid}/score`] = scoreAtual + pts;
-                });
-                if (Object.keys(updates).length > 0) {
-                    update(ref(db), updates);
-                }
-
-                // Log detalhado
-                let logMsg = '🏆 Rodada finalizada! Pontos:\n';
-                Object.entries(pontos).forEach(([pid, pts]) => {
-                    logMsg += `  ${playersCache[pid]?.nome || pid}: +${pts} pts\n`;
-                });
-                log(logMsg);
-
-                // Remove rodada após 4 segundos
-                setTimeout(() => {
-                    remove(rodadaRef);
-                    sairModoJogo();
-                    sairModoConferencia();
-                    jaEnviei = false;
-                    document.getElementById('statusArea').innerHTML =
-                        '<span class="status-badge status-ready">Pronto para nova rodada</span>';
-                    log('🔄 Pronto para nova rodada!');
-                }, 4000);
-            });
-        };
-
-        function calcularPontos(rodada) {
-            const pontos = {};
-            const respostas = rodada.respostas || {};
-            const invalidacoes = rodada.invalidacoes || {};
-            const letra = rodada.letra.toLowerCase();
-            const playerIds = Object.keys(playersCache);
-
-            categoriasAtivas.forEach(cat => {
-                // Verificar se a categoria foi invalidada (pelo menos 1 voto)
-                const invCount = invalidacoes[cat] || {};
-                const totalInv = Object.values(invCount).reduce((a, b) => a + b, 0);
-                const categoriaInvalida = totalInv > 0;
-
-                if (categoriaInvalida) {
-                    // Ninguém pontua nessa categoria
-                    playerIds.forEach(pid => {
-                        pontos[pid] = (pontos[pid] || 0) + 0;
-                    });
-                    return;
-                }
-
-                // Mapear palavras válidas por jogador
-                const palavrasValidas = {};
-                playerIds.forEach(pid => {
-                    let palavra = (respostas[pid]?.[cat] || '').toLowerCase();
-                    palavra = removerAcento(palavra).trim();
-                    if (palavra && palavra.startsWith(letra)) {
-                        palavrasValidas[pid] = palavra;
-                    }
-                });
-
-                // Contar frequência de cada palavra
-                const freq = {};
-                Object.values(palavrasValidas).forEach(p => {
-                    freq[p] = (freq[p] || 0) + 1;
-                });
-
-                // Atribuir pontos
-                playerIds.forEach(pid => {
-                    const p = palavrasValidas[pid];
-                    if (p) {
-                        const unica = freq[p] === 1;
-                        pontos[pid] = (pontos[pid] || 0) + (unica ? 10 : 5);
-                    } else {
-                        pontos[pid] = (pontos[pid] || 0) + 0;
-                    }
-                });
-            });
-
-            return pontos;
-        }
-
-        function removerAcento(str) {
-            return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-        }
-
-        function escapeHtml(str) {
-            const div = document.createElement('div');
-            div.textContent = str;
-            return div.innerHTML;
-        }
-
-        // ============ SCOREBOARD ============
-        function atualizarScoreboard(players) {
-            const sorted = Object.entries(players).sort((a, b) => (b[1].score || 0) - (a[1].score || 0));
-            const medals = ['🥇', '🥈', '🥉'];
-            document.getElementById('scoreboard').innerHTML =
-                '<div class="section-title">🏅 Placar</div>' +
-                sorted.map(([id, p], i) =>
-                    `<div class="score-row">
-                <span class="pos">${medals[i] || (i+1)+'º'}</span>
-                <span class="name">${escapeHtml(p.nome)}</span>
-                <span class="pts">${p.score||0} pts</span>
-              </div>`
-                ).join('');
-        }
-
-        // ============ UTILITÁRIOS ============
-        function log(msg) {
-            const logEl = document.getElementById('log');
-            logEl.innerHTML += msg + '<br>';
-            logEl.scrollTop = logEl.scrollHeight;
-        }
-
-        window.copiarCodigo = function() {
-            if (salaAtual) {
-                navigator.clipboard.writeText(salaAtual).then(() => {
-                    log('📋 Código copiado: ' + salaAtual);
-                }).catch(() => {
-                    prompt('Código da sala:', salaAtual);
-                });
-            }
-        };
-
-        window.sairSala = function() {
-            if (salaAtual) {
-                remove(ref(db, `stop/${salaAtual}/players/${meuId}`));
-                clearInterval(timerInterval);
-            }
-            location.reload();
-        };
-
-        // ============ KEYDOWN PARA NAVEGAÇÃO ENTRE INPUTS ============
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter' && document.getElementById('playArea').classList.contains('hidden') ===
-                false && !jaEnviei) {
-                const catsDiv = document.getElementById('cats');
-                const inputs = catsDiv.querySelectorAll('input:not(:disabled)');
-                const currentIdx = Array.from(inputs).indexOf(document.activeElement);
-                if (currentIdx >= 0 && currentIdx < inputs.length - 1) {
-                    e.preventDefault();
-                    inputs[currentIdx + 1].focus();
-                    inputs[currentIdx + 1].select();
-                } else if (currentIdx === inputs.length - 1) {
-                    // Último input, pergunta se quer enviar
-                    e.preventDefault();
-                    if (confirm('Enviar todas as respostas?')) {
-                        window.enviarRespostas();
-                    }
-                }
-            }
-        });
-
-        // Inicializar
-        log('👋 Bem-vindo! Entre com seu nome e código da sala.');
-    </script>
+  a.href = url;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+</script>
 </body>
 </html>
